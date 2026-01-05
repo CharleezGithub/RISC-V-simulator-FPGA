@@ -4,17 +4,14 @@ import chisel.lib.uart._
 
 class RISCV() extends Module {
   val io = IO(new Bundle {
-    val tx = Output(Bool())
+    val pc = Output(UInt(32.W))
+    val addr = Output(UInt(8.W))
   })
 
-  val uart = Module(new UArt(100000000))
-
-  // UART
-  uart.io.add := false.B
-  uart.io.buy := false.B
-  uart.io.canStock := 12.U
-  io.tx := uart.io.tx
-
+  // Value definitions
+  val pc = RegInit(0.U(32.W))
+  val addr = RegInit(0.U(8.W))
+  
 }
 // generate Verilog
 object RISCV extends App {
