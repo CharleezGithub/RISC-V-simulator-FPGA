@@ -2,7 +2,7 @@ import chisel3._
 import chisel3.util._
 
 class IF_ID extends Module {
-  new io = IO(new Bundle{
+  val io = IO(new Bundle{
     val pcIn = Input(UInt(32.W))
     val instrIn = Input(UInt(32.W))
     
@@ -21,7 +21,7 @@ class IF_ID extends Module {
 }
 
 class ID_reg_EX extends Module {
-  new io = IO(new Bundle{
+  val io = IO(new Bundle{
     
   })
 
