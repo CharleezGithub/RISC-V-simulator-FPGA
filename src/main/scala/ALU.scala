@@ -1,4 +1,4 @@
-class Instructions extends Module {
+class ALU extends Module {
   val io = IO(new Bundle {
     val instrNum = Input(UInt(8.W))
     val a        = Input(UInt(32.W))
@@ -15,7 +15,7 @@ class Instructions extends Module {
 }
 
 
-object InstructionsMain extends App {
+object ALUMain extends App {
   println("Generating the adder hardware")
-  emitVerilog(new Instructions(), Array("--target-dir", "generated"))
+  emitVerilog(new ALU(), Array("--target-dir", "generated"))
 }
