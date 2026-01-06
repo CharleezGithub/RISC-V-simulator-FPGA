@@ -7,12 +7,10 @@ class IF_reg_ID extends Module {
     val instr = Input(UInt(32.W))
     
     val pcRegOut = Output(UInt(32.W))
-    val pc4RegOut = Output(UInt(32.W))
     val instrRegOut = Output(UInt(32.W))
   })
 
   val pcReg = RegInit(UInt(0.U(32.W)))
-  val pc4Reg = RegInit(UInt(0.U(32.W)))
   val instrReg = RegInit(UInt(0.U(32.W)))
 
   pcReg = io.pc
