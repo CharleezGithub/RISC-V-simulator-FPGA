@@ -46,3 +46,11 @@ class ID_reg_EX extends Module {
     regs(io.rd) := io.rdData
   }
 }
+
+class EX_reg_MEM extends Module{
+  val io = IO(new Bundle {
+    
+  })
+
+
+}
