@@ -23,13 +23,5 @@ class Decoder extends Module {
   when (opcode === "b0110011".U) {
     when (funct3 === "b000".U && funct7 === "b0000000".U) { io.instrNum := 0.U } // add
     when (funct3 === "b000".U && funct7 === "b0100000".U) { io.instrNum := 1.U } // sub
-    when (funct3 === "b111".U) { io.instrNum := 2.U }
-    when (funct3 === "b110".U) { io.instrNum := 3.U }
-    when (funct3 === "b100".U) { io.instrNum := 4.U }
-    when (funct3 === "b001".U) { io.instrNum := 5.U }
-    when (funct3 === "b101".U && funct7 === "b0100000".U) { io.instrNum := 6.U }
-    when (funct3 === "b101".U && funct7 === "b0000000".U) { io.instrNum := 7.U }
-    when (funct3 === "b010".U) { io.instrNum := 8.U }
-    when (funct3 === "b011".U) { io.instrNum := 9.U }
   }
 }
