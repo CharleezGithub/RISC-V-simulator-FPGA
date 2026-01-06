@@ -9,7 +9,7 @@ class Fetch() extends Module {
 
    val pcReg = RegInit(0.U(32.W))
 
-   pcReg = pcReg + 4.U
+   pcReg := pcReg + 4.U
     
    io.pc := pcReg
    //hardcoded instruction fra git 0x12300093
