@@ -5,6 +5,9 @@
 hs_err_pid*
 target/*
 project/target
+project/target/.bloop
+project/project
+project/metals.sbt
 generated/
 .metals/
 .vscode/
