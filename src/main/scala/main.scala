@@ -19,6 +19,15 @@ class RISCV extends Module {
   // Connecting pipeline registers - Decoder
   decoder.io.instrIn := pipelineRegs.io.instr
   decoder.io.pcIn := pipelineRegs.io.pcOut 
+
+  // Connecting Decoder - pipeline registers
+  pipelineRegs.io.rs1In := decoder.io.rs1Out
+  pipelineRegs.io.rs2In := decoder.io.rs2Out
+  pipelineRegs.io.isADDIn := decoder.io.isADDOut
+  pipelineRegs.io.pcIn := decoder.io.pcOut
+
+  // Connecting pipeline register - ALU
+  
 }
 
 // generate Verilog
