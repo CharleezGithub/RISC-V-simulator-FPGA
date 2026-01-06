@@ -16,10 +16,16 @@ class IF_reg_ID extends Module {
   val instrReg = RegInit(UInt(0.U(32.W)))
 
   pcReg = io.pc
-  pc4Reg = io.pc + 4.U
   instrReg = io.instr
 
   io.pcRegOut := pcReg
-  io.pc4RegOut := pc4Reg
   io.instrRegOut := instrReg
+}
+
+class ID_reg_EX extends Module {
+  new io = IO(new Bundle{
+    
+  })
+
+
 }
