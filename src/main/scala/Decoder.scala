@@ -3,11 +3,12 @@ import chisel3.util._
 
 class Decoder extends Module {
   val io = IO(new Bundle {
-    val instr    = Input(UInt(32.W))
-    val rs1      = Output(UInt(5.W))
-    val rs2      = Output(UInt(5.W))
-    val rd       = Output(UInt(5.W))
-    val instrNum = Output(UInt(8.W))
+    val instr   = Input(UInt(32.W))
+    val rs1     = Output(UInt(5.W))
+    val rs2     = Output(UInt(5.W))
+    val rd      = Output(UInt(5.W))
+    val aluOp   = Output(UInt(8.W))
+    val imm     = Output(UInt(32.W))
   })
 
   io.rs1 := io.instr(19,15)
@@ -18,10 +19,17 @@ class Decoder extends Module {
   val funct3 = io.instr(14,12)
   val funct7 = io.instr(31,25)
 
-  io.instrNum := 255.U // INVALID
+  io.aluOp := 255.U
+  io.imm   := 0.U
 
-  when (opcode === "b0110011".U) {
-    when (funct3 === "b000".U && funct7 === "b0000000".U) { io.instrNum := 0.U } // add
-    when (funct3 === "b000".U && funct7 === "b0100000".U) { io.instrNum := 1.U } // sub
+  // ADD
+  when (opcode === "b0110011".U && funct3 === 0.U && funct7 === 0.U) {
+    io.aluOp := 0.U
+  }
+
+  // ADDI
+  when (opcode === "b0010011".U && funct3 === 0.U) {
+    io.aluOp := 10.U
+    io.imm   := io.instr(31,20).asSInt.asUInt
   }
 }
