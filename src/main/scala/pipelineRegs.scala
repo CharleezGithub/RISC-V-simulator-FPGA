@@ -48,3 +48,16 @@ class ID_reg_EX extends Module {
     io.isADDOut := isAddReg
     io.pcOut := pcInReg
 }
+
+class EX_reg_MEM extends Module {
+  val io = IO(new Bundle{
+        val ALUin = Input(UInt(32.W))
+
+        val ALUout = Output(UInt(32.W))
+  })
+
+  ALUreg = RegInit(0.U(32.W))
+  ALUReg = io.ALUin
+
+  io.ALUout := ALUreg
+}
