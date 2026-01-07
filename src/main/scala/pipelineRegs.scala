@@ -19,6 +19,9 @@ class IF_ID extends Module {
   io.pcOut := pcReg
   io.instr := instrReg
 }
+object IF_ID extends App {
+  emitVerilog(new IF_ID())
+}
 
 class ID_EX extends Module {
   val io = IO(new Bundle{
@@ -35,7 +38,7 @@ class ID_EX extends Module {
 
     val rs1Reg = RegInit(0.U(8.W))
     val rs2Reg = RegInit(0.U(8.W))
-    val isAddReg = RegInit(Bool())
+    val isAddReg = RegInit(false.B)
     val pcInReg = RegInit(0.U((32.W)))
 
     rs1Reg := io.rs1In
@@ -48,6 +51,9 @@ class ID_EX extends Module {
     io.isADDOut := isAddReg
     io.pcOut := pcInReg
 }
+object ID_EX extends App {
+  emitVerilog(new ID_EX())
+}
 
 class EX_MEM extends Module {
   val io = IO(new Bundle{
@@ -59,9 +65,16 @@ class EX_MEM extends Module {
   })
 
   val ALUReg = RegInit(0.U(32.W))
+  val pcReg = RegInit(0.U(32.W))
+  
+  pcReg := io.pcIn
   ALUReg := io.ALUin
 
   io.ALUout := ALUReg
+  io.pcOut  := pcReg
+}
+object EX_MEM extends App {
+  emitVerilog(new EX_MEM())
 }
 
 class MEM_WB extends Module {
@@ -77,4 +90,7 @@ class MEM_WB extends Module {
   ALUReg := io.ALUin
 
   io.ALUout := ALUReg
+}
+object MEM_WB extends App {
+  emitVerilog(new MEM_WB())
 }

@@ -11,3 +11,4 @@ project/metals.sbt
 generated/
 .metals/
 .vscode/
+.bloop/

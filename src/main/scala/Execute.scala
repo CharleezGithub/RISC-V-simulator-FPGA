@@ -9,15 +9,19 @@ class Execute extends Module {
         val pcIn = Input(UInt(32.W))
 
         val ALUout = Output(UInt(32.W))
-        val pcOut = Input(UInt(32.W))
+        val pcOut = Output(UInt(32.W))
     })
 
     // Passing on relevant values
     io.pcOut := io.pcIn
 
+    io.ALUout := RegInit(11111.U(32.W))
+    
     when(io.isADDIn === true.B){
         io.ALUout := io.rs1In + io.rs2In
-    } .otherwise{
-        io.ALUout := 11111111.U
-    }
+    } 
+    
+}
+object Execute extends App {
+  emitVerilog(new Execute())
 }

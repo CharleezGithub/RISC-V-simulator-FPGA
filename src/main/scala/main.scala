@@ -40,7 +40,7 @@ class RISCV extends Module {
   
   // Connecting Execute - pipeline registers 
   pipeline3.io.pcIn := execute.io.pcOut
-  pipeline3.io.ALUout := execute.io.ALUout
+  pipeline3.io.ALUin := execute.io.ALUout
 
   // Connecting pipeline registers - Memory
   memory.io.ALUin := pipeline3.io.ALUout

@@ -33,5 +33,8 @@ class Decode extends Module {
     // Big switch statement to determine the instruction type (WE ONLY DO ADD FOR NOW)
     val isADD = (instr(6,0) === "b0110011".U) && (instr(14,12) === "b000".U) && (instr(31,25) === "b0000000".U)
 
-
+    io.isADDOut := isADD
+}
+object Decode extends App {
+  emitVerilog(new Decode())
 }

@@ -13,3 +13,6 @@ class Memory extends Module{
     io.ALUout := io.ALUin
 
 }
+object Memory extends App {
+  emitVerilog(new Memory())
+}

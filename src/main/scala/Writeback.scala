@@ -11,3 +11,7 @@ class Writeback extends Module {
     io.write_data := io.ALUin
 
 }
+
+object Writeback extends App {
+  emitVerilog(new Writeback())
+}
