@@ -7,8 +7,8 @@ class Decode extends Module {
         val instrIn = Input(UInt(32.W))
 
         // Outputs
-        val rs1Out = Output(UInt(8.W))
-        val rs2Out = Output(UInt(8.W))
+        val rs1Out = Output(UInt(32.W))
+        val rs2Out = Output(UInt(32.W))
         val isADDOut = Output(Bool())
         val pcOut = Output(UInt(32.W))
     })

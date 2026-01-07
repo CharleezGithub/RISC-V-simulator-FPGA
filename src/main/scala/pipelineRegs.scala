@@ -38,10 +38,10 @@ class ID_reg_EX extends Module {
     val isAddReg = NextReg(Bool())
     val pcInReg = RegInit(0.U((32.W)))
 
-    rs1Reg = io.rs1In
-    rs2Reg = io.rs2In
-    isAddReg = io.isADDIn
-    pcInReg = io.pcIn
+    rs1Reg := io.rs1In
+    rs2Reg := io.rs2In
+    isAddReg := io.isADDIn
+    pcInReg := io.pcIn
 
     io.rs1Out := rs1Reg
     io.rs2Out := rs2Reg
@@ -56,8 +56,23 @@ class EX_reg_MEM extends Module {
         val ALUout = Output(UInt(32.W))
   })
 
-  ALUreg = RegInit(0.U(32.W))
+  val ALUReg = RegInit(0.U(32.W))
   ALUReg = io.ALUin
 
   io.ALUout := ALUreg
+}
+
+class MEM_reg_WB extends Module {
+  val io = IO(new Bundle{
+    //val mem_read = Input(UInt(32.W))
+    //val mem_write = Input(UInt(32.W))
+    val ALUin = Input(UInt(32.W))
+
+    val ALUout = Output(Uint(32.W))
+  })
+
+  val ALUReg = RegInit(0.U(32.W))
+  ALUReg := io.AlUin
+
+  io.ALUout := ALUReg
 }
