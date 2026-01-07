@@ -9,7 +9,11 @@ class Execute extends Module {
         val pcIn = Input(UInt(32.W))
 
         val ALUout = Output(UInt(32.W))
+        val pcOut = Input(UInt(32.W))
     })
+
+    // Passing on relevant values
+    io.pcOut := io.pcIn
 
     when(isADDIn === true.B){
         io.ALUout := io.rs1In.U + io.rs2In.U
