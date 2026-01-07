@@ -16,12 +16,12 @@ class Decode extends Module {
     val instr = io.instrIn
 
     // We split the instruction into its fields so we can make easy switch statement
-    // io.opcode := instr(6,0)
-    // io.rdAddr := instr(11,7)
-    // io.funct3 := instr(14,12)
-    io.rs1Out := instr(19,15)
-    io.rs2Out := instr(24,20)
-    // io.funct7 := instr(31,25)
+    io.opcode := instr(6,0)
+    io.rdAddr := instr(11,7)
+    io.funct3 := instr(14,12)
+    io.rs1 := instr(19,15)
+    io.rs2 := instr(24,20)
+    io.funct7 := instr(31,25)
 
     // we just forward the pc to the next stage nothing else neccesary
     io.pcOut := io.pcIn
