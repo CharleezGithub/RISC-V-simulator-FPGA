@@ -15,6 +15,7 @@ class RISCV extends Module {
   val pipeline3 = Module(new EX_MEM)
   val memory = Module(new Memory)
   val pipeline4 = Module(new MEM_WB)
+  val writeback = Module(new Writeback)
 
 
   // Connecting Fetch - pipeline registers
@@ -48,7 +49,7 @@ class RISCV extends Module {
   pipeline4.io.ALUin := memory.io.ALUout
 
   // Connecting pipeline registers - Write-back
-
+  writeback.io.ALUin := pipeline4.io.ALUout
 }
 
 // generate Verilog
