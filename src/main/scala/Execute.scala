@@ -15,8 +15,8 @@ class Execute extends Module {
     // Passing on relevant values
     io.pcOut := io.pcIn
 
-    when(isADDIn === true.B){
-        io.ALUout := io.rs1In.U + io.rs2In.U
+    when(io.isADDIn === true.B){
+        io.ALUout := io.rs1In + io.rs2In
     } .otherwise{
         io.ALUout := 11111111.U
     }

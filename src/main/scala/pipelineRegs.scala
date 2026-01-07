@@ -10,11 +10,11 @@ class IF_ID extends Module {
     val instr = Output(UInt(32.W))
   })
 
-  val pcReg = RegInit(UInt(0.U(32.W)))
-  val instrReg = RegInit(UInt(0.U(32.W)))
+  val pcReg = RegInit(0.U(32.W))
+  val instrReg = RegInit(0.U(32.W))
 
-  pcReg = io.pcIn
-  instrReg = io.instrIn
+  pcReg := io.pcIn
+  instrReg := io.instrIn
 
   io.pcOut := pcReg
   io.instr := instrReg
@@ -34,8 +34,8 @@ class ID_EX extends Module {
   })
 
     val rs1Reg = RegInit(0.U(8.W))
-    val rs2Reg = NextReg(0.U(8.W))
-    val isAddReg = NextReg(Bool())
+    val rs2Reg = RegInit(0.U(8.W))
+    val isAddReg = RegInit(Bool())
     val pcInReg = RegInit(0.U((32.W)))
 
     rs1Reg := io.rs1In
@@ -59,9 +59,9 @@ class EX_MEM extends Module {
   })
 
   val ALUReg = RegInit(0.U(32.W))
-  ALUReg = io.ALUin
+  ALUReg := io.ALUin
 
-  io.ALUout := ALUreg
+  io.ALUout := ALUReg
 }
 
 class MEM_WB extends Module {
@@ -70,11 +70,11 @@ class MEM_WB extends Module {
     //val mem_write = Input(UInt(32.W))
     val ALUin = Input(UInt(32.W))
 
-    val ALUout = Output(Uint(32.W))
+    val ALUout = Output(UInt(32.W))
   })
 
   val ALUReg = RegInit(0.U(32.W))
-  ALUReg := io.AlUin
+  ALUReg := io.ALUin
 
   io.ALUout := ALUReg
 }
