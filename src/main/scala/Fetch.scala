@@ -6,13 +6,13 @@ class Fetch extends Module {
         val program    = Input(Vec(1024, UInt(32.W))) // full program memory
         val pcOut      = Output(UInt(32.W))          // current PC to send to ID
         val instr      = Output(UInt(32.W))          // fetched instruction
-
-        // Control inputs from later stages 
-        val branchEn   = Input(Bool())               // branch/jump taken
-        val branchAddr = Input(UInt(32.W))           // branch target
-        val flush      = Input(Bool())               // pipeline flush signal
     })
-
+    
+    // Control inputs from later stages (dummy values for now)
+    val branchEn = RegInit(Bool(false.B))             // branch/jump taken
+    val branchAddr = RegInit(UInt(0.U(32.W)))           // branch target
+    val flush      = RegInit(Bool(false.B))             // pipeline flush signal
+    
     // PC register
     val pcReg = RegInit(0.U(32.W))
 
