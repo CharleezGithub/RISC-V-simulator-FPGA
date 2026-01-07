@@ -4,9 +4,103 @@ import chisel.lib.uart._
 
 class RISCV extends Module {
   val io = IO(new Bundle {
+    val rx = Input(Bool())
+    val readyToReadProgram = Input(Bool())
+    val runProgram = Input(Bool())
+    val tx = Output(Bool())
 
+    val idleLED = Output(Bool())
+    val listeningLED = Output(Bool())
+    val runningLED = Output(Bool())
   })
-  // Instantiate all stages so we can wire them together 
+  // ---
+  // UART and Bootloader section
+  // ---
+  // Defaults for LEDs
+  io.idleLED := false.B
+  io.listeningLED := false.B
+  io.runningLED := false.B
+
+  val instructionMemory = RegInit(VecInit(Seq.fill(1024)(0.U(32.W))))
+
+  // States
+  val idle :: running :: listening :: Nil = Enum(3)
+  val state = RegInit(idle)
+
+  // flags
+  val uartResponseType = RegInit(0.U(4.W))
+  val uartSendResponse = io.runProgram
+
+  val readyPrev = RegInit(false.B)
+  val runPrev = RegInit(false.B)
+
+  val readyRise = io.readyToReadProgram && !readyPrev
+  val runRise = io.runProgram && !runPrev
+
+  readyPrev := io.readyToReadProgram
+  runPrev := io.runProgram
+
+  // Start capturing/listening to uart
+  val captureActive = RegInit(false.B)
+  when(readyRise) {
+    captureActive := true.B
+    state := listening
+  }
+  when(runRise) {
+    captureActive := false.B
+  }
+
+  when(io.runProgram) {
+    uartResponseType := 2.U
+    state := running
+  }
+
+  // Start UART and connect flags
+  val uart = Module(new Uart(100_000_000, 115200))
+  uart.io.rx := io.rx
+  uart.io.responseType := uartResponseType
+  uart.io.sendResponse := uartSendResponse
+  uart.io.captureEnable := captureActive
+  uart.io.clearBuffer := readyRise
+
+  // Start bootloader
+  val bootloaderStart = readyRise
+
+  val bootloader = Module(new UartBootloader())
+  bootloader.io.start := bootloaderStart
+  bootloader.io.rxValid := uart.io.rxValid
+  bootloader.io.rxData := uart.io.rxReadValue
+
+  io.tx := uart.io.tx
+
+  // Load program when bootloader writemem is enabled
+  when(bootloader.io.memWriteEn && state === running) {
+    instructionMemory(bootloader.io.memWriteAddr) := bootloader.io.memWriteData
+  }
+
+  // State machine
+  switch(state) {
+    is(idle) {
+      io.idleLED := true.B
+      io.listeningLED := false.B
+      io.runningLED := false.B
+    }
+    is(listening) {
+      io.idleLED := false.B
+      io.listeningLED := true.B
+      io.runningLED := false.B
+    }
+    is(running) {
+      io.idleLED := false.B
+      io.listeningLED := false.B
+      io.runningLED := true.B
+    }
+  }
+
+  // ---
+  // RISC-V sim section
+  // ---
+  // Instantiate all stages so we can wire them together
   val fetch = Module(new Fetch)
   val pipeline1 = Module(new IF_ID)
   val decoder = Module(new Decode)
@@ -17,14 +111,14 @@ class RISCV extends Module {
   val pipeline4 = Module(new MEM_WB)
   val writeback = Module(new Writeback)
 
-
   // Connecting Fetch - pipeline registers
+  fetch.io.program := instructionMemory
   pipeline1.io.instrIn := fetch.io.instr
   pipeline1.io.pcIn := fetch.io.pcOut
 
   // Connecting pipeline registers - Decoder
   decoder.io.instrIn := pipeline1.io.instr
-  decoder.io.pcIn := pipeline1.io.pcOut 
+  decoder.io.pcIn := pipeline1.io.pcOut
 
   // Connecting Decoder - pipeline registers
   pipeline2.io.rs1In := decoder.io.rs1Out
@@ -37,8 +131,8 @@ class RISCV extends Module {
   execute.io.rs2In := pipeline2.io.rs2Out
   execute.io.isADDIn := pipeline2.io.isADDOut
   execute.io.pcIn := pipeline2.io.pcOut
-  
-  // Connecting Execute - pipeline registers 
+
+  // Connecting Execute - pipeline registers
   pipeline3.io.pcIn := execute.io.pcOut
   pipeline3.io.ALUin := execute.io.ALUout
 

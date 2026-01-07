@@ -4,8 +4,8 @@
 ## - rename the used ports (in each line, after get_ports) according to the top level signal names in the project
 
 ## Clock signal
-#set_property -dict { PACKAGE_PIN W5   IOSTANDARD LVCMOS33 } [get_ports clk]
-#create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clk]
+set_property -dict { PACKAGE_PIN W5   IOSTANDARD LVCMOS33 } [get_ports clock]
+create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clock]
 
 
 ## Switches
@@ -41,9 +41,9 @@
 #set_property -dict { PACKAGE_PIN W3    IOSTANDARD LVCMOS33 } [get_ports {led[10]}]
 #set_property -dict { PACKAGE_PIN U3    IOSTANDARD LVCMOS33 } [get_ports {led[11]}]
 #set_property -dict { PACKAGE_PIN P3    IOSTANDARD LVCMOS33 } [get_ports {led[12]}]
-#set_property -dict { PACKAGE_PIN N3    IOSTANDARD LVCMOS33 } [get_ports {led[13]}]
-#set_property -dict { PACKAGE_PIN P1    IOSTANDARD LVCMOS33 } [get_ports {led[14]}]
-#set_property -dict { PACKAGE_PIN L1    IOSTANDARD LVCMOS33 } [get_ports {led[15]}]
+set_property -dict { PACKAGE_PIN N3    IOSTANDARD LVCMOS33 } [get_ports io_idleLED]
+set_property -dict { PACKAGE_PIN P1    IOSTANDARD LVCMOS33 } [get_ports io_runningLED]
+set_property -dict { PACKAGE_PIN L1    IOSTANDARD LVCMOS33 } [get_ports io_listeningLED]
 
 
 ##7 Segment Display
@@ -64,11 +64,19 @@
 
 
 ##Buttons
-set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports {io_runBtn}]
-set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports {io_loadBtn}]
+#set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports {io_runBtn}]
+#set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports {io_loadBtn}]
 #set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS33 } [get_ports btnL]
-#set_property -dict { PACKAGE_PIN T17   IOSTANDARD LVCMOS33 } [get_ports btnR]
 #set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports btnD]
+
+# btnD proposed as reset
+set_property -dict { PACKAGE_PIN U17 IOSTANDARD LVCMOS33 } [get_ports reset]
+
+# btnL Start listening for program through UART.
+set_property -dict { PACKAGE_PIN W19 IOSTANDARD LVCMOS33 } [get_ports io_readyToReadProgram]
+
+# btnC Start loaded program
+set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports io_runProgram]
 
 
 ##Pmod Header JA
@@ -129,9 +137,9 @@ set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports {io_load
 #set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports Vsync]
 
 
-##USB-RS232 Interface
-#set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports RsRx]
-#set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS33 } [get_ports RsTx]
+## USB-RS232 Interface (on-board USB-UART)
+set_property -dict { PACKAGE_PIN B18   IOSTANDARD LVCMOS33 } [get_ports io_rx] ; # PC TX -> FPGA RX
+set_property -dict { PACKAGE_PIN A18   IOSTANDARD LVCMOS33 } [get_ports io_tx] ; # FPGA TX -> PC RX
 
 
 ##USB HID (PS/2)
