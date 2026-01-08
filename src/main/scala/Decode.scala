@@ -18,7 +18,11 @@ class Decode extends Module {
         val funct3Out = Output(UInt(32.W))
         val funct7Out = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
-        val instrSel = Output(UInt(32.W)) 
+        val immIOut = Output(UInt(32.W))
+        val immSOut = Output(UInt(32.W))
+        val immBOut = Output(UInt(32.W))
+        val immUOut = Output(UInt(32.W))
+        val immJOutput = Output(UInt(32.W))
     })
 
     val instr = io.instrIn
@@ -30,6 +34,24 @@ class Decode extends Module {
     val rs1 = instr(19,15)
     val rs2 = instr(24,20)
     val funct7 = instr(31,25)
+
+    //imm vals
+    // I-type: instr[31:20]
+    val immI = Cat(funct7, rs2)
+
+    // S-type: instr[31:25] ++ instr[11:7]
+    val immS = Cat(funct7, rdAddr)
+
+    // B-type: branch immediate
+    val immB = Cat(funct7(6), rdAddr(0), funct7(5,0), rdAddr(4,1), 0.U)
+
+    // U-type: upper immediate
+    val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W))
+
+    // J-type: jump immediate
+    val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5,0), rs2(4,1), 0.U)
+
+
 
     //32 register files
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
@@ -59,7 +81,12 @@ class Decode extends Module {
     // we just forward the pc to the next stage nothing else neccesary
     io.pcOut := io.pcIn
 
-  
+    // imm forwarding
+    io.immBOut := immB
+    io.immIOut := immI
+    io.immJOutput := immJ
+    io.immSOut := immS
+    io.immUOut := immU
 }
 object Decode extends App {
   emitVerilog(new Decode())
