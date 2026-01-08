@@ -19,7 +19,6 @@ class Execute extends Module {
         val immB = Input(UInt(32.W))
         val immU = Input(UInt(32.W))
         val immJ = Input(UInt(32.W))
-        val pcIn = Input(UInt(32.W))
 
         // Outputs
         val ALUout = Output(UInt(32.W))

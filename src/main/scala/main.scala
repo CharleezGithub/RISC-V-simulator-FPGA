@@ -96,6 +96,9 @@ class RISCV extends Module {
     instructionMemory(bootloader.io.memWriteAddr) := bootloader.io.memWriteData
   }
 
+  // Latching ALUL Out for debug print
+  val latchingALU = RegInit(0.U(32.W))
+
   // ---
   // RISC-V sim section
   // ---
@@ -128,60 +131,6 @@ class RISCV extends Module {
       io.idleLED := false.B
       io.listeningLED := false.B
       io.runningLED := true.B
-
-      // Connecting Fetch - pipeline registers
-      fetch.io.program := instructionMemory
-      pipeline1.io.instrIn := fetch.io.instr
-      pipeline1.io.pcIn := fetch.io.pcOut
-
-      // Connecting pipeline registers - Decoder
-      decoder.io.instrIn := pipeline1.io.instr
-      decoder.io.pcIn := pipeline1.io.pcOut
-
-      // Connecting Decoder - pipeline registers
-      pipeline2.io.rs1In := decoder.io.rs1Out
-      pipeline2.io.rs2In := decoder.io.rs2Out
-      pipeline2.io.pcIn := decoder.io.pcOut
-
-      pipeline2.io.opcodeIn := decoder.io.opcodeOut
-      pipeline2.io.funct3In := decoder.io.funct3Out
-      pipeline2.io.funct7In := decoder.io.funct7Out
-
-      pipeline2.io.immIIn := decoder.io.immIOut
-      pipeline2.io.immSIn := decoder.io.immSOut
-      pipeline2.io.immBIn := decoder.io.immBOut
-      pipeline2.io.immUIn := decoder.io.immUOut
-      pipeline2.io.immJIn := decoder.io.immJOut
-
-      // Connecting pipeline registers - Execute
-      execute.io.rs1Data := pipeline2.io.rs1Out
-      execute.io.rs2Data := pipeline2.io.rs2Out
-      execute.io.pcIn := pipeline2.io.pcOut
-
-      execute.io.opcode := pipeline2.io.opcodeOut
-      execute.io.funct3 := pipeline2.io.funct3Out
-      execute.io.funct7 := pipeline2.io.funct7Out
-
-      execute.io.immI := pipeline2.io.immIOut
-      execute.io.immS := pipeline2.io.immSOut
-      execute.io.immB := pipeline2.io.immBOut
-      execute.io.immU := pipeline2.io.immUOut
-      execute.io.immJ := pipeline2.io.immJOut
-
-      // Connecting Execute - pipeline registers
-      pipeline3.io.pcIn := execute.io.pcOut
-      pipeline3.io.ALUin := execute.io.ALUout
-
-      // Connecting pipeline registers - Memory
-      memory.io.ALUin := pipeline3.io.ALUout
-
-      // Connecting Memory - pipeline registers
-      pipeline4.io.ALUin := memory.io.ALUout
-
-      // Connecting pipeline registers - Write-back
-      writeback.io.ALUin := pipeline4.io.ALUout
-
-      uart.io.printOutRegs(0) := execute.io.ALUout
     }
   }
 
@@ -193,6 +142,10 @@ class RISCV extends Module {
   // Connecting pipeline registers - Decoder
   decoder.io.instrIn := pipeline1.io.instr
   decoder.io.pcIn := pipeline1.io.pcOut
+
+  decoder.io.writeFlag := false.B
+  decoder.io.writeAddr := 0.U(5.W)
+  decoder.io.writeData := 0.U(32.W)
 
   // Connecting Decoder - pipeline registers
   pipeline2.io.rs1In := decoder.io.rs1Out
@@ -237,7 +190,9 @@ class RISCV extends Module {
   // Connecting pipeline registers - Write-back
   writeback.io.ALUin := pipeline4.io.ALUout
 
-  uart.io.printOutRegs(0) := execute.io.ALUout
+  latchingALU := Mux(execute.io.ALUout === 0.U, latchingALU, execute.io.ALUout)
+
+  uart.io.printOutRegs(0) := latchingALU
 }
 
 // generate Verilog
