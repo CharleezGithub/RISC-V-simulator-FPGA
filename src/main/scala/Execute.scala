@@ -56,9 +56,9 @@ class Execute extends Module {
         //---------------------------------------------(   I-type   )------------------------------------------------------
         is("b0010011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUout := io.rs1Data + io.imm }                                                   // ADDI
-                is("b111".U) { io.ALUout := io.rs1Data & io.imm }                                                   // ANDI
-                is("b110".U) { io.ALUout := io.rs1Data | io.imm }                                                   // ORI
+                is("b000".U) { io.ALUout := io.rs1Data + io.immI }                                                   // ADDI
+                is("b111".U) { io.ALUout := io.rs1Data & io.immI }                                                   // ANDI
+                is("b110".U) { io.ALUout := io.rs1Data | io.immI }                                                   // ORI
                 is("b100".U) { /* XORI */ }                                                                         // XORI
                 is("b010".U) { /* SLTI */ }                                                                         // SLTI
                 is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
