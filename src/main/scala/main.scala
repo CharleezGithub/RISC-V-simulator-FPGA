@@ -154,10 +154,19 @@ class RISCV extends Module {
       pipeline2.io.immJIn := decoder.io.immJOut
 
       // Connecting pipeline registers - Execute
-      execute.io.rs1In := pipeline2.io.rs1Out
-      execute.io.rs2In := pipeline2.io.rs2Out
-      execute.io.isADDIn := pipeline2.io.isADDOut
+      execute.io.rs1Data := pipeline2.io.rs1Out
+      execute.io.rs2Data := pipeline2.io.rs2Out
       execute.io.pcIn := pipeline2.io.pcOut
+
+      execute.io.opcode := pipeline2.io.opcodeOut
+      execute.io.funct3 := pipeline2.io.funct3Out
+      execute.io.funct7 := pipeline2.io.funct7Out
+
+      execute.io.immI := pipeline2.io.immIOut
+      execute.io.immS := pipeline2.io.immSOut
+      execute.io.immB := pipeline2.io.immBOut
+      execute.io.immU := pipeline2.io.immUOut
+      execute.io.immJ := pipeline2.io.immJOut
 
       // Connecting Execute - pipeline registers
       pipeline3.io.pcIn := execute.io.pcOut
