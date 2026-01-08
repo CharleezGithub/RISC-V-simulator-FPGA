@@ -1,44 +1,50 @@
 import chisel3._
 import chisel3.util._
-
 class UartBootloader extends Module {
   val io = IO(new Bundle {
-    // Control
     val start = Input(Bool())
     val done = Output(Bool())
-
-    // UART RX interface
     val rxValid = Input(Bool())
     val rxData = Input(UInt(8.W))
-
-    // Memory write interface
     val memWriteEn = Output(Bool())
     val memWriteAddr = Output(UInt(32.W))
-    val memWriteData = Output(UInt(8.W))
+    val memWriteData = Output(UInt(32.W)) // ← Changed to 32 bits
   })
 
-  val addr = RegInit(0.U(32.W))
+  val wordAddr = RegInit(0.U(32.W))
+  val byteIdx = RegInit(0.U(2.W))
+  val byteBuffer = RegInit(VecInit(Seq.fill(4)(0.U(8.W))))
   val active = RegInit(false.B)
   val doneReg = RegInit(false.B)
+
   io.memWriteEn := false.B
-  io.memWriteAddr := addr
-  io.memWriteData := io.rxData
+  io.memWriteAddr := wordAddr
+  io.memWriteData := Cat(
+    byteBuffer(3),
+    byteBuffer(2),
+    byteBuffer(1),
+    byteBuffer(0)
+  )
   io.done := doneReg
 
   when(io.start) {
     active := true.B
-    addr := 0.U
+    wordAddr := 0.U
+    byteIdx := 0.U
     doneReg := false.B
   }
 
-  // Escape sequence
   when(io.rxData === 0xff.U && io.rxValid && active) {
     doneReg := true.B
     active := false.B
-  }.otherwise {
-    when(active && io.rxValid) {
+  }.elsewhen(active && io.rxValid) {
+    byteBuffer(byteIdx) := io.rxData
+    when(byteIdx === 3.U) {
       io.memWriteEn := true.B
-      addr := addr + 1.U
+      wordAddr := wordAddr + 1.U
+      byteIdx := 0.U
+    }.otherwise {
+      byteIdx := byteIdx + 1.U
     }
   }
 }
