@@ -7,11 +7,14 @@ class RISCV extends Module {
     val rx = Input(Bool())
     val readyToReadProgram = Input(Bool())
     val runProgram = Input(Bool())
+    val printRegs = Input(Bool())
+
     val tx = Output(Bool())
 
     val idleLED = Output(Bool())
     val listeningLED = Output(Bool())
     val runningLED = Output(Bool())
+    val printRegLED = Output(Bool())
   })
   // ---
   // UART and Bootloader section
@@ -28,14 +31,22 @@ class RISCV extends Module {
   val state = RegInit(idle)
 
   // flags
-  val uartResponseType = RegInit(0.U(4.W))
-  val uartSendResponse = io.runProgram
 
   val readyPrev = RegInit(false.B)
   val runPrev = RegInit(false.B)
 
   val readyRise = io.readyToReadProgram && !readyPrev
   val runRise = io.runProgram && !runPrev
+
+  val uartResponseType = Wire(UInt(4.W))
+
+  val printPrev = RegInit(false.B)
+  val printRise = io.printRegs && !printPrev
+  printPrev := io.printRegs
+
+  io.printRegLED := io.printRegs
+
+  val uartSendResponse = runRise || printRise
 
   readyPrev := io.readyToReadProgram
   runPrev := io.runProgram
@@ -46,12 +57,19 @@ class RISCV extends Module {
     captureActive := true.B
     state := listening
   }
+
+  uartResponseType := 0.U
+
   when(runRise) {
+    uartResponseType := 2.U
+    captureActive := false.B
+  }
+  when(printRise) {
+    uartResponseType := 3.U
     captureActive := false.B
   }
 
   when(io.runProgram) {
-    uartResponseType := 2.U
     state := running
   }
 
@@ -74,27 +92,8 @@ class RISCV extends Module {
   io.tx := uart.io.tx
 
   // Load program when bootloader writemem is enabled
-  when(bootloader.io.memWriteEn && state === running) {
+  when(bootloader.io.memWriteEn && state === listening) {
     instructionMemory(bootloader.io.memWriteAddr) := bootloader.io.memWriteData
-  }
-
-  // State machine
-  switch(state) {
-    is(idle) {
-      io.idleLED := true.B
-      io.listeningLED := false.B
-      io.runningLED := false.B
-    }
-    is(listening) {
-      io.idleLED := false.B
-      io.listeningLED := true.B
-      io.runningLED := false.B
-    }
-    is(running) {
-      io.idleLED := false.B
-      io.listeningLED := false.B
-      io.runningLED := true.B
-    }
   }
 
   // ---
@@ -110,6 +109,63 @@ class RISCV extends Module {
   val memory = Module(new Memory)
   val pipeline4 = Module(new MEM_WB)
   val writeback = Module(new Writeback)
+
+  // --
+  // State machine
+  // --
+  switch(state) {
+    is(idle) {
+      io.idleLED := true.B
+      io.listeningLED := false.B
+      io.runningLED := false.B
+    }
+    is(listening) {
+      io.idleLED := false.B
+      io.listeningLED := true.B
+      io.runningLED := false.B
+    }
+    is(running) {
+      io.idleLED := false.B
+      io.listeningLED := false.B
+      io.runningLED := true.B
+
+      // Connecting Fetch - pipeline registers
+      fetch.io.program := instructionMemory
+      pipeline1.io.instrIn := fetch.io.instr
+      pipeline1.io.pcIn := fetch.io.pcOut
+
+      // Connecting pipeline registers - Decoder
+      decoder.io.instrIn := pipeline1.io.instr
+      decoder.io.pcIn := pipeline1.io.pcOut
+
+      // Connecting Decoder - pipeline registers
+      pipeline2.io.rs1In := decoder.io.rs1Out
+      pipeline2.io.rs2In := decoder.io.rs2Out
+      pipeline2.io.isADDIn := decoder.io.isADDOut
+      pipeline2.io.pcIn := decoder.io.pcOut
+
+      // Connecting pipeline registers - Execute
+      execute.io.rs1In := pipeline2.io.rs1Out
+      execute.io.rs2In := pipeline2.io.rs2Out
+      execute.io.isADDIn := pipeline2.io.isADDOut
+      execute.io.pcIn := pipeline2.io.pcOut
+
+      // Connecting Execute - pipeline registers
+      pipeline3.io.pcIn := execute.io.pcOut
+      pipeline3.io.ALUin := execute.io.ALUout
+
+      // Connecting pipeline registers - Memory
+      memory.io.ALUin := pipeline3.io.ALUout
+
+      // Connecting Memory - pipeline registers
+      pipeline4.io.ALUin := memory.io.ALUout
+
+      // Connecting pipeline registers - Write-back
+      writeback.io.ALUin := pipeline4.io.ALUout
+
+      uart.io.printOutRegs(0) := execute.io.ALUout
+    }
+  }
 
   // Connecting Fetch - pipeline registers
   fetch.io.program := instructionMemory
@@ -144,6 +200,8 @@ class RISCV extends Module {
 
   // Connecting pipeline registers - Write-back
   writeback.io.ALUin := pipeline4.io.ALUout
+
+  uart.io.printOutRegs(0) := execute.io.ALUout
 }
 
 // generate Verilog
