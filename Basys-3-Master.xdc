@@ -7,6 +7,8 @@
 set_property -dict { PACKAGE_PIN W5   IOSTANDARD LVCMOS33 } [get_ports clock]
 create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clock]
 
+## Reset - allow non-dedicated routing
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets reset_IBUF]
 
 ## Switches
 #set_property -dict { PACKAGE_PIN V17   IOSTANDARD LVCMOS33 } [get_ports {sw[0]}]
@@ -44,6 +46,7 @@ create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports clo
 set_property -dict { PACKAGE_PIN N3    IOSTANDARD LVCMOS33 } [get_ports io_idleLED]
 set_property -dict { PACKAGE_PIN P1    IOSTANDARD LVCMOS33 } [get_ports io_runningLED]
 set_property -dict { PACKAGE_PIN L1    IOSTANDARD LVCMOS33 } [get_ports io_listeningLED]
+set_property -dict { PACKAGE_PIN P3    IOSTANDARD LVCMOS33 } [get_ports io_printRegLED]
 
 
 ##7 Segment Display
@@ -67,7 +70,6 @@ set_property -dict { PACKAGE_PIN L1    IOSTANDARD LVCMOS33 } [get_ports io_liste
 #set_property -dict { PACKAGE_PIN U18   IOSTANDARD LVCMOS33 } [get_ports {io_runBtn}]
 #set_property -dict { PACKAGE_PIN T18   IOSTANDARD LVCMOS33 } [get_ports {io_loadBtn}]
 #set_property -dict { PACKAGE_PIN W19   IOSTANDARD LVCMOS33 } [get_ports btnL]
-#set_property -dict { PACKAGE_PIN U17   IOSTANDARD LVCMOS33 } [get_ports btnD]
 
 # btnD proposed as reset
 set_property -dict { PACKAGE_PIN U17 IOSTANDARD LVCMOS33 } [get_ports reset]
@@ -78,6 +80,8 @@ set_property -dict { PACKAGE_PIN W19 IOSTANDARD LVCMOS33 } [get_ports io_readyTo
 # btnC Start loaded program
 set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports io_runProgram]
 
+# btnR Print out regs
+set_property -dict { PACKAGE_PIN T17 IOSTANDARD LVCMOS33 } [get_ports io_printRegs]
 
 ##Pmod Header JA
 #set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 } [get_ports {JA[0]}];#Sch name = JA1
