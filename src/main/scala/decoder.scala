@@ -14,6 +14,9 @@ class Decode extends Module {
         // Outputs
         val rs1Out = Output(UInt(32.W))
         val rs2Out = Output(UInt(32.W))
+        val opcodeOut = Output(UInt(32.W))
+        val funct3Out = Output(UInt(32.W))
+        val funct7Out = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
         val instrSel = Output(UInt(32.W)) 
     })
@@ -36,7 +39,7 @@ class Decode extends Module {
     }
     regs(0) := 0.U  
 
-    //write-read-bypass yap fra chat
+    //write-read-bypass yap (double check later) & passing values
     io.rs1Out := Mux(
       io.writeFlag && (io.writeAddr === rs1) && (io.writeAddr =/= 0.U),
       io.writeData,
@@ -48,6 +51,10 @@ class Decode extends Module {
       io.writeData,
       regs(rs1)
     )
+
+    io.funct3Out := funct3
+    io.funct7Out := funct7
+    io.opcodeOut := opcode
 
     // we just forward the pc to the next stage nothing else neccesary
     io.pcOut := io.pcIn
