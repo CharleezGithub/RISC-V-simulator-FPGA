@@ -8,11 +8,14 @@ class Execute extends Module {
         val funct7 = Input(UInt(32.W))
         val opcode = Input(UInt(32.W))
 
-        // Data values
+        // Input data values
         val rs1Data = Input(UInt(32.W))
         val rs2Data = Input(UInt(32.W))
-        val imm = Input(UInt(32.W))
-
+        val immIOut = Input(UInt(32.W))
+        val immSOut = Input(UInt(32.W))
+        val immBOut = Input(UInt(32.W))
+        val immUOut = Input(UInt(32.W))
+        val immJOut = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
 
         // Outputs

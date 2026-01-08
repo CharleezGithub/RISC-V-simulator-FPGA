@@ -22,7 +22,7 @@ class Decode extends Module {
         val immSOut = Output(UInt(32.W))
         val immBOut = Output(UInt(32.W))
         val immUOut = Output(UInt(32.W))
-        val immJOutput = Output(UInt(32.W))
+        val immJOut = Output(UInt(32.W))
     })
 
     val instr = io.instrIn
