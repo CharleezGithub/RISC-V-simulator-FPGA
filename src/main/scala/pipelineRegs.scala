@@ -25,32 +25,85 @@ object IF_ID extends App {
 
 class ID_EX extends Module {
   val io = IO(new Bundle{
-        val rs1In = Input(UInt(8.W))
-        val rs2In = Input(UInt(8.W))
-        val isADDIn = Input(Bool())
-        val pcIn = Input(UInt(32.W))
+    // Inputs
+    val rs1In = Input(UInt(8.W))
+    val rs2In = Input(UInt(8.W))
+    val pcIn = Input(UInt(32.W))
 
-        val rs1Out = Output(UInt(8.W))
-        val rs2Out = Output(UInt(8.W))
-        val isADDOut = Output(Bool())
-        val pcOut = Output(UInt(32.W))
+    val opcodeIn = Output(UInt(32.W))
+    val funct3In = Output(UInt(32.W))
+    val funct7In = Output(UInt(32.W))
+
+    val immIIn = Input(UInt(32.W))
+    val immSIn = Input(UInt(32.W))
+    val immBIn = Input(UInt(32.W))
+    val immUIn = Input(UInt(32.W))
+    val immJIn = Input(UInt(32.W))
+
+    // Outputs
+    val rs1Out = Output(UInt(8.W))
+    val rs2Out = Output(UInt(8.W))
+    val pcOut = Output(UInt(32.W))
+
+    val opcodeOut = Output(UInt(32.W))
+    val funct3Out = Output(UInt(32.W))
+    val funct7Out = Output(UInt(32.W))
+
+    val immIOut = Output(UInt(32.W))
+    val immSOut = Output(UInt(32.W))
+    val immBOut = Output(UInt(32.W))
+    val immUOut = Output(UInt(32.W))
+    val immJOut = Output(UInt(32.W))
+
   })
-
+    // Pipeline Registers
     val rs1Reg = RegInit(0.U(8.W))
     val rs2Reg = RegInit(0.U(8.W))
-    val isAddReg = RegInit(false.B)
     val pcInReg = RegInit(0.U((32.W)))
 
+    val opcodeReg = RegInit(0.U((32.W)))
+    val funct3Reg = RegInit(0.U((32.W)))
+    val funct7Reg = RegInit(0.U((32.W)))
+
+    val immIReg = RegInit(0.U((32.W)))
+    val immSReg = RegInit(0.U((32.W)))
+    val immBReg = RegInit(0.U((32.W)))
+    val immUReg = RegInit(0.U((32.W)))
+    val immJReg = RegInit(0.U((32.W)))
+
+
+    // Connecting input to register
     rs1Reg := io.rs1In
     rs2Reg := io.rs2In
-    isAddReg := io.isADDIn
     pcInReg := io.pcIn
 
+    opcodeReg := io.opcodeIn
+    funct3Reg := io.funct3In
+    funct7Reg := io.funct7In
+
+    immIReg := io.immIIn
+    immSReg := io.immSIn
+    immBReg := io.immBIn
+    immUReg := io.immUIn
+    immJReg := io.immJIn
+    
+
+    // Connecting output to register
     io.rs1Out := rs1Reg
     io.rs2Out := rs2Reg
-    io.isADDOut := isAddReg
     io.pcOut := pcInReg
+
+    io.opcodeOut := opcodeReg
+    io.funct3Out := funct3Reg
+    io.funct7Out := funct7Reg
+
+    io.immIOut := immIReg
+    io.immSOut := immSReg
+    io.immBOut := immBReg
+    io.immUOut := immUReg
+    io.immJOut := immJReg
 }
+
 object ID_EX extends App {
   emitVerilog(new ID_EX())
 }
