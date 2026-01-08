@@ -51,7 +51,7 @@ class Execute extends Module {
         }
 
         //---------------------------------------------(   I-type   )-----------------------------------------------------
-        is("b0010011".U) { // I-type ALU
+        is("b0010011".U) {
             switch(io.funct3) {
                 is("b000".U) { io.ALUout := io.rs1Data + io.imm }                                                   // ADDI
                 is("b111".U) { io.ALUout := io.rs1Data & io.imm }                                                   // ANDI
@@ -59,12 +59,12 @@ class Execute extends Module {
                 is("b100".U) { /* XORI */ }                                                                         // XORI
                 is("b010".U) { /* SLTI */ }                                                                         // SLTI
                 is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
-                is("b001".U) { /* SLLI */ }    
+                is("b001".U) { /* SLLI */ }                                                                         // SLLI
            
                 is("b101".U) { 
                     switch(io.funct7) {
-                        is("b0000000".U) { /* SRLI */ }
-                        is("b0100000".U) { /* SRAI */ }
+                        is("b0000000".U) { /* SRLI */ }                                                             // SRLI
+                        is("b0100000".U) { /* SRAI */ }                                                             // SRAI
                     }
                 }
             }
