@@ -141,8 +141,17 @@ class RISCV extends Module {
       // Connecting Decoder - pipeline registers
       pipeline2.io.rs1In := decoder.io.rs1Out
       pipeline2.io.rs2In := decoder.io.rs2Out
-      pipeline2.io.isADDIn := decoder.io.isADDOut
       pipeline2.io.pcIn := decoder.io.pcOut
+
+      pipeline2.io.opcodeIn := decoder.io.opcodeOut
+      pipeline2.io.funct3In := decoder.io.funct3Out
+      pipeline2.io.funct7In := decoder.io.funct7Out
+
+      pipeline2.io.immIIn := decoder.io.immIOut
+      pipeline2.io.immSIn := decoder.io.immSOut
+      pipeline2.io.immBIn := decoder.io.immBOut
+      pipeline2.io.immUIn := decoder.io.immUOut
+      pipeline2.io.immJIn := decoder.io.immJOut
 
       // Connecting pipeline registers - Execute
       execute.io.rs1In := pipeline2.io.rs1Out
@@ -179,14 +188,32 @@ class RISCV extends Module {
   // Connecting Decoder - pipeline registers
   pipeline2.io.rs1In := decoder.io.rs1Out
   pipeline2.io.rs2In := decoder.io.rs2Out
-  pipeline2.io.isADDIn := decoder.io.isADDOut
   pipeline2.io.pcIn := decoder.io.pcOut
 
+  pipeline2.io.opcodeIn := decoder.io.opcodeOut
+  pipeline2.io.funct3In := decoder.io.funct3Out
+  pipeline2.io.funct7In := decoder.io.funct7Out
+
+  pipeline2.io.immIIn := decoder.io.immIOut
+  pipeline2.io.immSIn := decoder.io.immSOut
+  pipeline2.io.immBIn := decoder.io.immBOut
+  pipeline2.io.immUIn := decoder.io.immUOut
+  pipeline2.io.immJIn := decoder.io.immJOut
+
   // Connecting pipeline registers - Execute
-  execute.io.rs1In := pipeline2.io.rs1Out
-  execute.io.rs2In := pipeline2.io.rs2Out
-  execute.io.isADDIn := pipeline2.io.isADDOut
+  execute.io.rs1Data := pipeline2.io.rs1Out
+  execute.io.rs2Data := pipeline2.io.rs2Out
   execute.io.pcIn := pipeline2.io.pcOut
+
+  execute.io.opcode := pipeline2.io.opcodeOut
+  execute.io.funct3 := pipeline2.io.funct3Out
+  execute.io.funct7 := pipeline2.io.funct7Out
+
+  execute.io.immI := pipeline2.io.immIOut
+  execute.io.immS := pipeline2.io.immSOut
+  execute.io.immB := pipeline2.io.immBOut
+  execute.io.immU := pipeline2.io.immUOut
+  execute.io.immJ := pipeline2.io.immJOut
 
   // Connecting Execute - pipeline registers
   pipeline3.io.pcIn := execute.io.pcOut
