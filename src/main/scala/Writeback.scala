@@ -3,9 +3,16 @@ import chisel3.util._
 
 class Writeback extends Module {
     val io = IO(new Bundle{
-        val ALUin = Input(UInt(32.W))
+      val ALUin = Input(UInt(32.W))
 
-        val write_data = Output(UInt(32.W))
+      val rdAddr   = Input(UInt(5.W))
+      val rdDataIn = Input(UInt(32.W))
+      val regWrite = Input(Bool())
+
+    // To register file
+      val rfWAddr  = Output(UInt(5.W))
+      val rfWData  = Output(UInt(32.W))
+      val rfWEn    = Output(Bool())
     })
 
     io.write_data := io.ALUin

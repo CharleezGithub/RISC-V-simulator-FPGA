@@ -79,5 +79,5 @@ class Execute extends Module {
   
 
 object Execute extends App {
-  emitVerilog(new Execute())
+    emitVerilog(new Execute())
 }
