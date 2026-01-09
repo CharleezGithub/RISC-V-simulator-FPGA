@@ -16,7 +16,8 @@ class Writeback extends Module {
     })
 
     io.rfData := io.ALUin
-
+    io.rfWAddr := io.rdAddr
+    
 }
 
 object Writeback extends App {

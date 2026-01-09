@@ -38,30 +38,20 @@ class Execute extends Module {
             switch(io.funct7) {
                 is("b0000000".U) {
                     switch(io.funct3) {
-                        is("b000".U) {
-                            io.ALUout := io.rs1Data + io.rs2Data
-                        } // ADD
-                        is("b111".U) {
-                            io.ALUout := io.rs1Data & io.rs2Data
-                        } // AND
-                        is("b110".U) {
-                            io.ALUout := io.rs1Data | io.rs2Data
-                        } // OR
-                        is("b100".U) { /* XOR */ } // XOR
-                        is("b001".U) { /* SLL */ } // SLL
-                        is("b101".U) { /* SRL */ } // SRL
-                        is("b010".U) {
-                            io.ALUout := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt
-                        } // SLT
-                        is("b011".U) { /* SLTU */ } // SLTU
+                        is("b000".U) { io.ALUout := io.rs1Data + io.rs2Data }                                       // ADD
+                        is("b111".U) { io.ALUout := io.rs1Data & io.rs2Data }                                       // AND
+                        is("b110".U) { io.ALUout := io.rs1Data | io.rs2Data }                                       // OR
+                        is("b100".U) { /* XOR */ }                                                                  // XOR
+                        is("b001".U) { /* SLL */ }                                                                  // SLL
+                        is("b101".U) { /* SRL */ }                                                                  // SRL
+                        is("b010".U) { io.ALUout := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
+                        is("b011".U) { /* SLTU */ }                                                                 // SLTU
                     }
                 }
                 is("b0100000".U) {
                     switch(io.funct3) {
-                        is("b000".U) {
-                            io.ALUout := io.rs1Data - io.rs2Data
-                        } // SUB
-                        is("b101".U) { /* SRA */ } // SRA
+                        is("b000".U) { io.ALUout := io.rs1Data - io.rs2Data }                                       // SUB
+                        is("b101".U) { /* SRA */ }                                                                  // SRA
                     }
                 }
             }
@@ -70,18 +60,18 @@ class Execute extends Module {
         // ---------------------------------------------(   I-type   )------------------------------------------------------
         is("b0010011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUout := io.rs1Data + io.immI } // ADDI
-                is("b111".U) { io.ALUout := io.rs1Data & io.immI } // ANDI
-                is("b110".U) { io.ALUout := io.rs1Data | io.immI } // ORI
-                is("b100".U) { /* XORI */ } // XORI
-                is("b010".U) { /* SLTI */ } // SLTI
-                is("b011".U) { /* SLTIU */ } // SLTIU
-                is("b001".U) { /* SLLI */ } // SLLI
+                is("b000".U) { io.ALUout := io.rs1Data + io.immI }                                                  // ADDI
+                is("b111".U) { io.ALUout := io.rs1Data & io.immI }                                                  // ANDI
+                is("b110".U) { io.ALUout := io.rs1Data | io.immI }                                                  // ORI
+                is("b100".U) { /* XORI */ }                                                                         // XORI
+                is("b010".U) { /* SLTI */ }                                                                         // SLTI
+                is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
+                is("b001".U) { /* SLLI */ }                                                                         // SLLI
 
                 is("b101".U) {
                     switch(io.funct7) {
-                        is("b0000000".U) { /* SRLI */ } // SRLI
-                        is("b0100000".U) { /* SRAI */ } // SRAI
+                        is("b0000000".U) { /* SRLI */ }                                                             // SRLI
+                        is("b0100000".U) { /* SRAI */ }                                                             // SRAI
                     }
                 }
             }
