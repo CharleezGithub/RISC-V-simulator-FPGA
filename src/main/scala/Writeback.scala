@@ -3,8 +3,8 @@ import chisel3.util._
 
 class Writeback extends Module {
     val io = IO(new Bundle {
+        // Inputs
         val ALUIn = Input(UInt(32.W))
-
         val rdAddr = Input(UInt(5.W))
         val rdDataIn = Input(UInt(32.W))
         val regWrite = Input(Bool())
@@ -14,10 +14,10 @@ class Writeback extends Module {
         val rfWData = Output(UInt(32.W))
         val rfWEn = Output(Bool())
     })
-
+    // Data will be sent to certain address in register file when enable signal true
     io.rfData := io.ALUin
     io.rfWAddr := io.rdAddr
-    
+
 }
 
 object Writeback extends App {
