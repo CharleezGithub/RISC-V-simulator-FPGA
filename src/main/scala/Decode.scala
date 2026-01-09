@@ -23,6 +23,7 @@ class Decode extends Module {
         val immBOut = Output(UInt(32.W))
         val immUOut = Output(UInt(32.W))
         val immJOut = Output(UInt(32.W))
+        val rdAddrOut = Output(UInt(8.W))
     })
 
     val instr = io.instrIn
@@ -72,6 +73,7 @@ class Decode extends Module {
         regs(rs1)
     )
 
+    io.rdAddrOut := rdAddr
     io.funct3Out := funct3
     io.funct7Out := funct7
     io.opcodeOut := opcode
