@@ -9,13 +9,15 @@ class IF_ID extends Module {
         val pcOut = Output(UInt(32.W))
         val instr = Output(UInt(32.W))
     })
-
+    // Registers
     val pcReg = RegInit(0.U(32.W))
     val instrReg = RegInit(0.U(32.W))
 
+    // Connecting inputs to registers
     pcReg := io.pcIn
     instrReg := io.instrIn
 
+    // Connecting outputs to registers
     io.pcOut := pcReg
     io.instr := instrReg
 }
@@ -26,6 +28,7 @@ object IF_ID extends App {
 class ID_EX extends Module {
     val io = IO(new Bundle {
         // Inputs
+        val rdaddrIn = Input(UInt(8.W))
         val rs1In = Input(UInt(8.W))
         val rs2In = Input(UInt(8.W))
         val pcIn = Input(UInt(32.W))
@@ -41,6 +44,7 @@ class ID_EX extends Module {
         val immJIn = Input(UInt(32.W))
 
         // Outputs
+        val rdaddrOut = Output(UInt(8.W))
         val rs1Out = Output(UInt(8.W))
         val rs2Out = Output(UInt(8.W))
         val pcOut = Output(UInt(32.W))
@@ -57,6 +61,7 @@ class ID_EX extends Module {
 
     })
     // Pipeline Registers
+    val rdaddrReg = RegInit(0.U(8.W))
     val rs1Reg = RegInit(0.U(8.W))
     val rs2Reg = RegInit(0.U(8.W))
     val pcInReg = RegInit(0.U((32.W)))
@@ -72,6 +77,7 @@ class ID_EX extends Module {
     val immJReg = RegInit(0.U((32.W)))
 
     // Connecting input to register
+    rdaddrReg = io.rdaddrIn
     rs1Reg := io.rs1In
     rs2Reg := io.rs2In
     pcInReg := io.pcIn
@@ -87,6 +93,7 @@ class ID_EX extends Module {
     immJReg := io.immJIn
 
     // Connecting output to register
+    io.rdaddrOut := rdaddrReg
     io.rs1Out := rs1Reg
     io.rs2Out := rs2Reg
     io.pcOut := pcInReg
@@ -108,20 +115,27 @@ object ID_EX extends App {
 
 class EX_MEM extends Module {
     val io = IO(new Bundle {
-        val ALUin = Input(UInt(32.W))
+        val rdaddrIn = Input(UInt(8.W))
+        val ALUIn = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
 
-        val ALUout = Output(UInt(32.W))
+        val rdaddrOut = Output(UInt(32.W))
+        val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
     })
-
+    // Registers
+    val rdaddrReg = RegInit(0.U(8.W))
     val ALUReg = RegInit(0.U(32.W))
     val pcReg = RegInit(0.U(32.W))
 
+    // Connecting input to registers
+    rdaddrReg := io.rdaddrIn
     pcReg := io.pcIn
-    ALUReg := io.ALUin
+    ALUReg := io.ALUIn
 
-    io.ALUout := ALUReg
+    // Connecting output to registers
+    io.rdaddrOut := rdaddrReg
+    io.ALUOut := ALUReg
     io.pcOut := pcReg
 }
 object EX_MEM extends App {
@@ -132,15 +146,23 @@ class MEM_WB extends Module {
     val io = IO(new Bundle {
         // val mem_read = Input(UInt(32.W))
         // val mem_write = Input(UInt(32.W))
-        val ALUin = Input(UInt(32.W))
+        val ALUIn = Input(UInt(32.W))
+        val rdaddrIn = Input(UInt(8.W))
 
-        val ALUout = Output(UInt(32.W))
+        val ALUOut = Output(UInt(32.W))
+        val rdaddrOut = Output(UInt(8.W))
     })
-
+    // Registers
     val ALUReg = RegInit(0.U(32.W))
-    ALUReg := io.ALUin
+    val rdaddrReg = RegInit(0.U(8.W))
 
-    io.ALUout := ALUReg
+    // Connecting input to registers
+    ALUReg := io.ALUIn
+    rdaddrReg := io.rdaddrIn
+
+    // Connecting output to registers
+    io.ALUOut := ALUReg
+    io.rdaddrOut := rdaddrReg
 }
 object MEM_WB extends App {
     emitVerilog(new MEM_WB())

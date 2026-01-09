@@ -150,6 +150,7 @@ class RISCV extends Module {
     decoder.io.writeData := 0.U(32.W)
 
     // Connecting Decoder - pipeline registers
+    pipeline2.io.rdaddrIn := decoder.io.rdaddrOut
     pipeline2.io.rs1In := decoder.io.rs1Out
     pipeline2.io.rs2In := decoder.io.rs2Out
     pipeline2.io.pcIn := decoder.io.pcOut
@@ -165,6 +166,7 @@ class RISCV extends Module {
     pipeline2.io.immJIn := decoder.io.immJOut
 
     // Connecting pipeline registers - Execute
+    execute.io.rdaddr := pipeline2.io.rdaddrOut
     execute.io.rs1Data := pipeline2.io.rs1Out
     execute.io.rs2Data := pipeline2.io.rs2Out
     execute.io.pcIn := pipeline2.io.pcOut
@@ -180,22 +182,26 @@ class RISCV extends Module {
     execute.io.immJ := pipeline2.io.immJOut
 
     // Connecting Execute - pipeline registers
+    pipeline3.io.rdaddrIn := execute.io.rdaddrOut
     pipeline3.io.pcIn := execute.io.pcOut
-    pipeline3.io.ALUin := execute.io.ALUout
+    pipeline3.io.ALUIn := execute.io.ALUOut
 
     // Connecting pipeline registers - Memory
-    memory.io.ALUin := pipeline3.io.ALUout
+    memory.io.ALUIn := pipeline3.io.ALUOut
+    memory.io.rdaddrIn := pipeline3.io.rdaddrOut
 
     // Connecting Memory - pipeline registers
-    pipeline4.io.ALUin := memory.io.ALUout
+    pipeline4.io.ALUIn := memory.io.ALUOut
+    pipeline4.io.rdaddrIn := memory.io.rdaddrOut
 
     // Connecting pipeline registers - Write-back
-    writeback.io.ALUin := pipeline4.io.ALUout
+    writeback.io.ALUIn := pipeline4.io.ALUOut
+    writeback.io.rdaddr := pineline4.io.rdaddrOut
 
     latchingALU := Mux(
-        execute.io.ALUout === 0.U,
+        execute.io.ALUOut === 0.U,
         latchingALU,
-        execute.io.ALUout
+        execute.io.ALUOut
     )
 
     uart.io.printOutRegs(0) := latchingALU

@@ -5,12 +5,17 @@ class Memory extends Module {
     val io = IO(new Bundle {
         // val mem_read = Input(Bool())
         // val mem_write = Input(Bool())
-        val ALUin = Input(UInt(32.W))
+        // Inputs
+        val ALUIn = Input(UInt(32.W))
+        val rdaddrIn = Input(UInt(8.W))
 
-        val ALUout = Output(UInt(32.W))
+        // Outputs
+        val ALUOut = Output(UInt(32.W))
+        val rdaddrOut = Output(UInt(8.W))
     })
-
-    io.ALUout := io.ALUin
+    // passing values 
+    io.ALUOut := io.ALUIn
+    io.rdaddrOut := io.rdaddrIn
 
 }
 object Memory extends App {

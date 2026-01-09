@@ -3,7 +3,7 @@ import chisel3.util._
 
 class Writeback extends Module {
     val io = IO(new Bundle {
-        val ALUin = Input(UInt(32.W))
+        val ALUIn = Input(UInt(32.W))
 
         val rdAddr = Input(UInt(5.W))
         val rdDataIn = Input(UInt(32.W))
@@ -15,7 +15,7 @@ class Writeback extends Module {
         val rfWEn = Output(Bool())
     })
 
-    io.write_data := io.ALUin
+    io.rfData := io.ALUin
 
 }
 
