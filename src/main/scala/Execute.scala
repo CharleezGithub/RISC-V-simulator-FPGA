@@ -41,9 +41,9 @@ class Execute extends Module {
                         is("b000".U) { io.ALUout := io.rs1Data + io.rs2Data }                                       // ADD
                         is("b111".U) { io.ALUout := io.rs1Data & io.rs2Data }                                       // AND
                         is("b110".U) { io.ALUout := io.rs1Data | io.rs2Data }                                       // OR
-                        is("b100".U) { io.ALUOut := io.rs1Data ^ io.rs2Data }                                                                  // XOR
-                        is("b001".U) { /* SLL */ }                                                                  // SLL
-                        is("b101".U) { /* SRL */ }                                                                  // SRL
+                        is("b100".U) { io.ALUOut := io.rs1Data ^ io.rs2Data }                                       // XOR
+                        is("b001".U) { io.ALUOut := io.rs1Data << io.rs2Data }                                      // SLL
+                        is("b101".U) { io.ALUOut := io.rs1Data >> io.rs2Data }                                      // SRL
                         is("b010".U) { io.ALUout := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
                         is("b011".U) { /* SLTU */ }                                                                 // SLTU
                     }
@@ -63,7 +63,7 @@ class Execute extends Module {
                 is("b000".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // ADDI
                 is("b111".U) { io.ALUOut := io.rs1Data & io.immI }                                                  // ANDI
                 is("b110".U) { io.ALUOut := io.rs1Data | io.immI }                                                  // ORI
-                is("b100".U) { /* XORI */ }                                                                         // XORI
+                is("b100".U) { io.ALUOut := io.rs1Data ^ io.immI }                                                  // XORI
                 is("b010".U) { /* SLTI */ }                                                                         // SLTI
                 is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
                 is("b001".U) { /* SLLI */ }                                                                         // SLLI
