@@ -44,29 +44,20 @@ class Decode extends Module {
     val rs2 = instr(24, 20)
     val funct7 = instr(31, 25)
 
-    // imm vals
-    // I-type: instr[31:20]
-    val immI = Cat(funct7, rs2)
+    // immidate value generation
+    val immI = Cat(funct7, rs2) // I-type: instr[31:20]
+    val immS = Cat(funct7, rdAddr) // S-type: instr[31:25] ++ instr[11:7]
+    val immB = Cat(funct7(6), rdAddr(0), funct7(5, 0), rdAddr(4, 1), 0.U) // B-type: branch immediate
+    val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W)) // U-type: upper immediate
+    val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5, 0), rs2(4, 1), 0.U) // J-type: jump immediate
 
-    // S-type: instr[31:25] ++ instr[11:7]
-    val immS = Cat(funct7, rdAddr)
-
-    // B-type: branch immediate
-    val immB = Cat(funct7(6), rdAddr(0), funct7(5, 0), rdAddr(4, 1), 0.U)
-
-    // U-type: upper immediate
-    val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W))
-
-    // J-type: jump immediate
-    val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5, 0), rs2(4, 1), 0.U)
-
-    // 32 register files
+    // 32 register file intialization
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
     // writing system for the 32 regs
     when(io.writeFlag === true.B) {
         regs(io.writeAddr) := io.writeData
     }
-    regs(0) := 0.U
+    regs(0) := 0.U // hardwire x0 to 0
 
     // write-read-bypass yap (double check later) & passing values
     io.rs1Out := Mux(
@@ -74,28 +65,11 @@ class Decode extends Module {
         io.writeData,
         regs(rs1)
     )
-
     io.rs2Out := Mux(
         io.writeFlag && (io.writeAddr === rs1) && (io.writeAddr =/= 0.U),
         io.writeData,
         regs(rs1)
     )
-
-    io.rdAddrOut := rdAddr
-    io.funct3Out := funct3
-    io.funct7Out := funct7
-    io.opcodeOut := opcode
-
-    // we just forward the pc to the next stage nothing else neccesary
-    io.pcOut := io.pcIn
-
-    // imm forwarding
-    io.immBOut := immB
-    io.immIOut := immI
-    io.immJOut := immJ
-    io.immSOut := immS
-    io.immUOut := immU
-
     
     // Control unit
     io.memReadOut := false.B
@@ -199,8 +173,20 @@ class Decode extends Module {
             io.wbALUOrMemOut := false.B   
         }
     }
+    
+    // Forward all relevant values to next module 
+    io.rdAddrOut := rdAddr
+    io.funct3Out := funct3
+    io.funct7Out := funct7
+    io.opcodeOut := opcode
 
+    io.pcOut := io.pcIn
 
+    io.immBOut := immB
+    io.immIOut := immI
+    io.immJOut := immJ
+    io.immSOut := immS
+    io.immUOut := immU
 
 }
 object Decode extends App {
