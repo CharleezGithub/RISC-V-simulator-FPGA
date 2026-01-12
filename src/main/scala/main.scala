@@ -145,16 +145,12 @@ class RISCV extends Module {
     decoder.io.instrIn := pipeline1.io.instr
     decoder.io.pcIn := pipeline1.io.pcOut
 
-    decoder.io.writeFlag := false.B
-    decoder.io.writeAddr := 0.U(5.W)
-    decoder.io.writeData := 0.U(32.W)
-
     // Connecting Decoder - pipeline registers
     pipeline2.io.rdaddrIn := decoder.io.rdaddrOut
     pipeline2.io.rs1In := decoder.io.rs1Out
     pipeline2.io.rs2In := decoder.io.rs2Out
     pipeline2.io.pcIn := decoder.io.pcOut
-        //control signals
+    //control signals
     pipeline2.io.widthSizeIn := decoder.io.widthSizeOut
     pipeline2.io.memWriteIn := decoder.io.memWriteOut
     pipeline2.io.memReadIn := decoder.io.memReadOut
@@ -172,14 +168,12 @@ class RISCV extends Module {
     pipeline2.io.immJIn := decoder.io.immJOut
 
     // Connecting pipeline registers - Execute
-
-        //control signals
+    //control signals
     pipeline3.io.widthSizeIn := pipeline2.io.widthSizeOut
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
     pipeline3.io.memReadIn := pipeline2.io.memReadIn
     pipeline3.io.wbFlagIn := pipeline2.io.wbFlagOut
     pipeline3.io.wbALUOrMemOut := pipeline2.io.wbALUOrMemOut
-
 
     execute.io.rdaddr := pipeline2.io.rdaddrOut
     execute.io.rs1Data := pipeline2.io.rs1Out
@@ -210,7 +204,7 @@ class RISCV extends Module {
     memory.io.wbFlagIn := pipeline3.io.wbFlagOut
     memory.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
     
-        //control signals
+    //control signals
     pipeline4.io.widthSizeIn := pipeline3.io.widthSizeOut
     pipeline4.io.memWriteIn := pipeline3.io.memWriteOut
     pipeline4.io.memReadIn := pipeline3.io.memReadOut
@@ -231,6 +225,10 @@ class RISCV extends Module {
     writeback.io.ALUIn := pipeline4.io.ALUOut
     writeback.io.rdaddr := pineline4.io.rdaddrOut
 
+    // Connecting writeback - registerfile
+    decoder.io.writeAddr := writeback.io.rfWAddr
+    decoder.io.writeData := writeback.io.rfWData
+    decoder.io.writeFlag := writeback.io.rfWEn
 
     latchingALU := Mux(
         execute.io.ALUOut === 0.U,
