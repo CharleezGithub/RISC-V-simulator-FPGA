@@ -6,7 +6,6 @@ class Writeback extends Module {
         // Inputs
         val ALUIn = Input(UInt(32.W))
         val rdAddr = Input(UInt(5.W))
-        val rdDataIn = Input(UInt(32.W))
 
         val widthSizeIn = Input(UInt(2.W))
         val memWriteIn = Input(Bool())

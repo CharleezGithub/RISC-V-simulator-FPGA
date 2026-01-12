@@ -3,7 +3,7 @@ import chisel3.util._
 
 class Fetch extends Module {
     val io = IO(new Bundle {
-        val program = Input(Vec(1024, UInt(32.W))) // full program memory
+        val program = Input(Vec(64, UInt(32.W))) // full program memory
         val pcOut = Output(UInt(32.W)) // current PC to send to ID
         val instr = Output(UInt(32.W)) // fetched instruction
     })
