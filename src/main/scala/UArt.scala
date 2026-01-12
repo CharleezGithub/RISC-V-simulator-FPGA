@@ -9,9 +9,16 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
         val sendResponse = Input(Bool())
         val responseType = Input(
             UInt(4.W)
-        ) // 0 for "Program Received", 1 for profiling (Not Implemented), 2 for debug print out everything received, 3 for print out registers
+        ) // 0 for "Program Received", 1 for profiling, 2 for debug print out everything received, 3 for print out registers, 4 invalid
 
-        val printOutRegs = Input(Vec(1, UInt(32.W))) // Only 1 register for now
+        val busy = Output(Bool())
+
+        // Profiling
+        val profilingData = Input(
+            Vec(3, UInt(32.W))
+        ) // Clock Count, MemReadCount, MemWriteCount
+
+        val printOutRegs = Input(Vec(32, UInt(32.W))) // Only 1 register for now
         val captureEnable = Input(Bool())
         val clearBuffer = Input(Bool())
         val rxReadValue = Output(UInt(8.W))
@@ -69,46 +76,84 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
         ) // '0'-'9' or 'A'-'F'
     }
 
-    val regValue = io.printOutRegs(0)
-    val hexBytes = Wire(Vec(11, UInt(8.W))) // "0xXXXXXXXX\n"
-    hexBytes(0) := '0'.U
-    hexBytes(1) := 'x'.U
-    hexBytes(2) := nibbleToAscii(regValue(31, 28))
-    hexBytes(3) := nibbleToAscii(regValue(27, 24))
-    hexBytes(4) := nibbleToAscii(regValue(23, 20))
-    hexBytes(5) := nibbleToAscii(regValue(19, 16))
-    hexBytes(6) := nibbleToAscii(regValue(15, 12))
-    hexBytes(7) := nibbleToAscii(regValue(11, 8))
-    hexBytes(8) := nibbleToAscii(regValue(7, 4))
-    hexBytes(9) := nibbleToAscii(regValue(3, 0))
-    hexBytes(10) := '\n'.U
+    def u32ToHexLine(x: UInt): Vec[UInt] = {
+        VecInit(
+            Seq(
+                '0'.U,
+                'x'.U,
+                nibbleToAscii(x(31, 28)),
+                nibbleToAscii(x(27, 24)),
+                nibbleToAscii(x(23, 20)),
+                nibbleToAscii(x(19, 16)),
+                nibbleToAscii(x(15, 12)),
+                nibbleToAscii(x(11, 8)),
+                nibbleToAscii(x(7, 4)),
+                nibbleToAscii(x(3, 0)),
+                '\n'.U
+            )
+        )
+    }
 
-    val printOutRegsPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
-    printOutRegsPadded := VecInit(hexBytes ++ Seq.fill(MAX_LEN - 11)(0.U(8.W)))
+    // 32 regs × "0xXXXXXXXX\n" (11 bytes each) = 352 bytes
+    def regPrintByte(i: UInt): UInt = {
+        val regIdx = (i / 11.U)(4, 0) // 0..31
+        val off = (i % 11.U)(3, 0) // 0..10
+        val v = io.printOutRegs(regIdx)
+        MuxLookup(
+            off,
+            0.U,
+            Array(
+                0.U -> '0'.U,
+                1.U -> 'x'.U,
+                2.U -> nibbleToAscii(v(31, 28)),
+                3.U -> nibbleToAscii(v(27, 24)),
+                4.U -> nibbleToAscii(v(23, 20)),
+                5.U -> nibbleToAscii(v(19, 16)),
+                6.U -> nibbleToAscii(v(15, 12)),
+                7.U -> nibbleToAscii(v(11, 8)),
+                8.U -> nibbleToAscii(v(7, 4)),
+                9.U -> nibbleToAscii(v(3, 0)),
+                10.U -> '\n'.U
+            )
+        )
+    }
+
+    val printOutProfilingPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
+
+    val clkLine = u32ToHexLine(io.profilingData(0))
+    val rdLine = u32ToHexLine(io.profilingData(1))
+    val wrLine = u32ToHexLine(io.profilingData(2))
+
+    printOutProfilingPadded := VecInit(
+        clkLine ++ rdLine ++ wrLine ++
+            Seq.fill(MAX_LEN - 33)(0.U)
+    )
 
     val responses = VecInit(
         Seq(
             strToVecPadded("Program Received!\r\n"),
-            strToVecPadded("Dummy Profiling Data! (Not Implemented Yet!)\r\n"),
+            printOutProfilingPadded,
             rxStoredPadded, // already Vec(32, UInt(8.W)) — pad rxStored to MAX_LEN too if needed
-            printOutRegsPadded,
-            strToVecPadded("Invalid Response Type!\r\n")
+            strToVecPadded(""), // placeholder for printRegs
+            strToVecPadded("Invalid!\r\n")
         )
     )
 
     val responseLengths = VecInit(
         Seq(
             20.U, // "Program Received!\r\n"
-            45.U, // Profiling message
+            33.U, // Profiling
             rxCount, // RX buffer length
-            11.U, // printRegs (32-bit register = 4 bytes)
-            26.U // Invalid Response Type
+            (32 * 11).U, // printRegs (32 registers)
+            11.U // "Invalid!\r\n"
         )
     )
 
-    val idx = RegInit(0.U(6.W))
+    val idx = RegInit(0.U(10.W))
     val sending = RegInit(false.B)
     val latchedResponseType = RegInit(0.U(4.W))
+
+    io.busy := sending
 
     // Rising edge detect for sendResponse
     val sendPrev = RegNext(io.sendResponse, false.B)
@@ -122,6 +167,12 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     val msgSel = Mux(latchedResponseType <= 3.U, latchedResponseType, 4.U)
     val msgLen = responseLengths(msgSel)
     val msgVec = responses(msgSel)
+
+    val msgByte = Wire(UInt(8.W))
+    msgByte := msgVec(idx)
+    when(msgSel === 3.U) {
+        msgByte := regPrintByte(idx)
+    }
 
     // Default TX signals
     txm.io.channel.valid := false.B
@@ -139,9 +190,11 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     // Stream the message out, one char at a time
     when(sending) {
         txm.io.channel.valid := true.B
-        txm.io.channel.bits := msgVec(idx)
+        txm.io.channel.bits := msgByte
 
         when(txm.io.channel.ready) {
+            txm.io.channel.valid := true.B
+            txm.io.channel.bits := msgByte
             when(idx === msgLen - 1.U) {
                 sending := false.B
             }.otherwise {

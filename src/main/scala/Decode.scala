@@ -6,7 +6,7 @@ class Decode extends Module {
         val pcIn = Input(UInt(32.W))
         val instrIn = Input(UInt(32.W))
 
-        // Control unit inputs 
+        // Control unit inputs
         val writeData = Input(UInt(32.W))
         val writeFlag = Input(Bool())
         val writeAddr = Input(UInt(5.W))
@@ -25,13 +25,19 @@ class Decode extends Module {
         val immJOut = Output(UInt(32.W))
         val rdAddrOut = Output(UInt(8.W))
 
-        //Control unit outputs
-        val widthSizeOut = Output(UInt(2.W)) // selects mem access size (00=byte, 01=half, 10=word)
+        // Control unit outputs
+        val widthSizeOut = Output(
+            UInt(2.W)
+        ) // selects mem access size (00=byte, 01=half, 10=word)
         val memWriteOut = Output(Bool()) // enables writ to data mem
         val memReadOut = Output(Bool()) // enables read from data mem
         val wbFlagOut = Output(Bool()) // enables writing a val to reg
-        val wbALUOrMemOut = Output(Bool())  // selects where to write back, whether to a reg (ALU = 0) or to mem (MEM = 1)
-        
+        val wbALUOrMemOut = Output(
+            Bool()
+        ) // selects where to write back, whether to a reg (ALU = 0) or to mem (MEM = 1)
+
+        // Expose full register file for printing
+        val regsOut = Output(Vec(32, UInt(32.W)))
     })
 
     val instr = io.instrIn
@@ -47,11 +53,26 @@ class Decode extends Module {
     // immidate value generation
     val immI = Cat(funct7, rs2) // I-type: instr[31:20]
     val immS = Cat(funct7, rdAddr) // S-type: instr[31:25] ++ instr[11:7]
-    val immB = Cat(funct7(6), rdAddr(0), funct7(5, 0), rdAddr(4, 1), 0.U) // B-type: branch immediate
-    val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W)) // U-type: upper immediate
-    val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5, 0), rs2(4, 1), 0.U) // J-type: jump immediate
+    val immB = Cat(
+        funct7(6),
+        rdAddr(0),
+        funct7(5, 0),
+        rdAddr(4, 1),
+        0.U
+    ) // B-type: branch immediate
+    val immU =
+        Cat(funct7, rs2, rs1, funct3, 0.U(12.W)) // U-type: upper immediate
+    val immJ = Cat(
+        funct7(6),
+        rs1,
+        funct3,
+        rs2(0),
+        funct7(5, 0),
+        rs2(4, 1),
+        0.U
+    ) // J-type: jump immediate
 
-    //--------------------------------------------( Register file logic )--------------------------------------------------
+    // --------------------------------------------( Register file logic )--------------------------------------------------
 
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
     // writing system for the 32 regs
@@ -60,7 +81,9 @@ class Decode extends Module {
     }
     regs(0) := 0.U // hardwire x0 to 0
 
-    //---------------------------------------------------------------------------------------------------------------------
+    io.regsOut := regs
+
+    // ---------------------------------------------------------------------------------------------------------------------
 
     // write-read-bypass yap (DOUBLE CHECK LATER!) & passing values
     io.rs1Out := Mux(
@@ -73,79 +96,79 @@ class Decode extends Module {
         io.writeData,
         regs(rs1)
     )
-    
-    //------------------------------------------------( Control Unit )-----------------------------------------------------
+
+    // ------------------------------------------------( Control Unit )-----------------------------------------------------
     io.memReadOut := false.B
     io.memWriteOut := false.B
     io.wbFlagOut := false.B
     io.wbALUOrMemOut := false.B
     io.widthSizeOut := "b00".U
-    switch(opcode){
-        //load word sets
-        is( "b0000011".U){
-            switch(funct3){
-                //LB
-                is("b000".U){
+    switch(opcode) {
+        // load word sets
+        is("b0000011".U) {
+            switch(funct3) {
+                // LB
+                is("b000".U) {
                     io.memReadOut := true.B
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
                     io.widthSizeOut := "b0".U
                 }
-                //LH
-                is("b001".U){
+                // LH
+                is("b001".U) {
                     io.memReadOut := true.B
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
                     io.widthSizeOut := "b01".U
                 }
-                //LW
-                is("b010".U){
+                // LW
+                is("b010".U) {
                     io.memReadOut := true.B
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
                     io.widthSizeOut := "b00".U
                 }
-                //LBU
-                is("b100".U){
+                // LBU
+                is("b100".U) {
                     io.memReadOut := true.B
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
-                    io.widthSizeOut := "b00".U                    
+                    io.widthSizeOut := "b00".U
                 }
-                //LHU
-                is("b101".U){
+                // LHU
+                is("b101".U) {
                     io.memReadOut := true.B
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
-                    io.widthSizeOut :=  "b01".U
+                    io.widthSizeOut := "b01".U
                 }
             }
         }
-        is("b0100011".U){
-            switch(funct3){
-                //SB
-                is("b000".U){
+        is("b0100011".U) {
+            switch(funct3) {
+                // SB
+                is("b000".U) {
                     io.memReadOut := false.B
                     io.memWriteOut := true.B
                     io.wbFlagOut := false.B
                     io.wbALUOrMemOut := false.B
                     io.widthSizeOut := "b00".U
                 }
-                //SH
-                is("b001".U){
+                // SH
+                is("b001".U) {
                     io.memReadOut := false.B
                     io.memWriteOut := true.B
                     io.wbFlagOut := false.B
                     io.wbALUOrMemOut := false.B
                     io.widthSizeOut := "b01".U
                 }
-                //SW
-                is("b010".U){
+                // SW
+                is("b010".U) {
                     io.memReadOut := false.B
                     io.memWriteOut := true.B
                     io.wbFlagOut := false.B
@@ -154,30 +177,30 @@ class Decode extends Module {
                 }
             }
         }
-        //Jumps, ALU-I, ALu-reg, 
-        is("b0110011".U, "b0010011".U, "b1101111".U, "b1100111".U){
-                io.memReadOut := false.B
-                io.memWriteOut := false.B
-                io.wbFlagOut := true.B
-                io.wbALUOrMemOut := false.B   
-        }
-        //branch
-        is("b1100011".U){
-                io.memReadOut := false.B
-                io.memWriteOut := false.B
-                io.wbFlagOut := false.B
-                io.wbALUOrMemOut := false.B               
-        }
-        //upper imm
-        is("b0110111".U, "b0010111".U){
+        // Jumps, ALU-I, ALu-reg,
+        is("b0110011".U, "b0010011".U, "b1101111".U, "b1100111".U) {
             io.memReadOut := false.B
             io.memWriteOut := false.B
             io.wbFlagOut := true.B
-            io.wbALUOrMemOut := false.B   
+            io.wbALUOrMemOut := false.B
+        }
+        // branch
+        is("b1100011".U) {
+            io.memReadOut := false.B
+            io.memWriteOut := false.B
+            io.wbFlagOut := false.B
+            io.wbALUOrMemOut := false.B
+        }
+        // upper imm
+        is("b0110111".U, "b0010111".U) {
+            io.memReadOut := false.B
+            io.memWriteOut := false.B
+            io.wbFlagOut := true.B
+            io.wbALUOrMemOut := false.B
         }
     }
 
-    // Forward all relevant values to next module 
+    // Forward all relevant values to next module
     io.rdAddrOut := rdAddr
     io.funct3Out := funct3
     io.funct7Out := funct7

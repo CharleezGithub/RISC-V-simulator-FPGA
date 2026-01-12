@@ -16,6 +16,21 @@ class RISCV extends Module {
         val runningLED = Output(Bool())
         val printRegLED = Output(Bool())
     })
+    val profilingPending = RegInit(false.B)
+
+    val instructionMemory = RegInit(VecInit(Seq.fill(64)(0.U(32.W))))
+
+    // ---
+    // Profiling
+    // ---
+    // Total Clocks during "running" state
+    val clockCount = RegInit(0.U(32.W))
+    // Total Memory reads and writes
+    val memReadCount = RegInit(0.U(32.W))
+    val memWriteCount = RegInit(0.U(32.W))
+
+    val profilingLatched = RegInit(VecInit(Seq.fill(3)(0.U(32.W))))
+
     // ---
     // UART and Bootloader section
     // ---
@@ -24,10 +39,10 @@ class RISCV extends Module {
     io.listeningLED := false.B
     io.runningLED := false.B
 
-    val instructionMemory = RegInit(VecInit(Seq.fill(1024)(0.U(32.W))))
+    val sendResponseReg = RegInit(false.B)
 
     // States
-    val idle :: running :: listening :: Nil = Enum(3)
+    val idle :: running :: listening :: finishingUp :: Nil = Enum(4)
     val state = RegInit(idle)
 
     // flags
@@ -38,15 +53,13 @@ class RISCV extends Module {
     val readyRise = io.readyToReadProgram && !readyPrev
     val runRise = io.runProgram && !runPrev
 
-    val uartResponseType = Wire(UInt(4.W))
+    val uartResponseType = RegInit(0.U(4.W))
 
     val printPrev = RegInit(false.B)
     val printRise = io.printRegs && !printPrev
     printPrev := io.printRegs
 
     io.printRegLED := io.printRegs
-
-    val uartSendResponse = runRise || printRise
 
     readyPrev := io.readyToReadProgram
     runPrev := io.runProgram
@@ -58,26 +71,44 @@ class RISCV extends Module {
         state := listening
     }
 
-    uartResponseType := 0.U
-
     when(runRise) {
         uartResponseType := 2.U
         captureActive := false.B
-    }
-    when(printRise) {
+
+        // Reset profiling counters at program start
+        clockCount := 0.U
+        memReadCount := 0.U
+        memWriteCount := 0.U
+
+    }.elsewhen(printRise) {
         uartResponseType := 3.U
         captureActive := false.B
     }
 
-    when(io.runProgram) {
+    when(runRise) {
         state := running
     }
 
     // Start UART and connect flags
     val uart = Module(new Uart(100_000_000, 115200))
+
+    // Default
+    sendResponseReg := false.B
+
+    when(runRise) {
+        sendResponseReg := true.B
+    }.elsewhen(printRise) {
+        sendResponseReg := true.B
+    }.elsewhen(profilingPending && !uart.io.busy) {
+        sendResponseReg := true.B
+        uartResponseType := 1.U // profiling
+        profilingPending := false.B
+    }
+
     uart.io.rx := io.rx
     uart.io.responseType := uartResponseType
-    uart.io.sendResponse := uartSendResponse
+    uart.io.sendResponse := sendResponseReg
+
     uart.io.captureEnable := captureActive
     uart.io.clearBuffer := readyRise
 
@@ -100,6 +131,8 @@ class RISCV extends Module {
 
     // Latching ALUL Out for debug print
     val latchingALU = RegInit(0.U(32.W))
+    // val printRegLatch = RegInit(0.U(32.W))
+    val printRegsLatch = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
 
     // ---
     // RISC-V sim section
@@ -123,6 +156,7 @@ class RISCV extends Module {
             io.idleLED := true.B
             io.listeningLED := false.B
             io.runningLED := false.B
+
         }
         is(listening) {
             io.idleLED := false.B
@@ -133,6 +167,32 @@ class RISCV extends Module {
             io.idleLED := false.B
             io.listeningLED := false.B
             io.runningLED := true.B
+
+            clockCount := clockCount + 1.U
+
+            // Something something read enable
+            /*
+            when(memory.io.mem_read) {
+                memReadCount := memReadCount + 1.U
+            }.otherwise(memory.io.mem_write) {
+                memWriteCount := memWriteCount + 1.U
+            }
+             */
+
+            // Stop program when instruction fetch is nothing
+            when(fetch.io.instr === "h00000000".U) {
+                state := finishingUp
+                profilingLatched(0) := clockCount + 1.U
+                profilingLatched(1) := memReadCount
+                profilingLatched(2) := memWriteCount
+                profilingPending := true.B
+            }
+        }
+        is(finishingUp) {
+            // Wait for profiling to send before resetting profiling data
+            when(!profilingPending) {
+                state := idle
+            }
         }
     }
 
@@ -145,12 +205,16 @@ class RISCV extends Module {
     decoder.io.instrIn := pipeline1.io.instr
     decoder.io.pcIn := pipeline1.io.pcOut
 
+    decoder.io.writeFlag := false.B
+    decoder.io.writeAddr := 0.U(5.W)
+    decoder.io.writeData := 0.U(32.W)
+
     // Connecting Decoder - pipeline registers
     pipeline2.io.rdaddrIn := decoder.io.rdAddrOut
     pipeline2.io.rs1In := decoder.io.rs1Out
     pipeline2.io.rs2In := decoder.io.rs2Out
     pipeline2.io.pcIn := decoder.io.pcOut
-    //control signals
+    // control signals
     pipeline2.io.widthSizeIn := decoder.io.widthSizeOut
     pipeline2.io.memWriteIn := decoder.io.memWriteOut
     pipeline2.io.memReadIn := decoder.io.memReadOut
@@ -168,12 +232,12 @@ class RISCV extends Module {
     pipeline2.io.immJIn := decoder.io.immJOut
 
     // Connecting pipeline registers - Execute
-    //control signals
+    // control signals
     pipeline3.io.widthSizeIn := pipeline2.io.widthSizeOut
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
     pipeline3.io.memReadIn := pipeline2.io.memReadIn
     pipeline3.io.wbFlagIn := pipeline2.io.wbFlagOut
-    pipeline3.io.wbALUOrMemOut := pipeline2.io.wbALUOrMemOut
+    pipeline3.io.wbALUOrMemIn := pipeline2.io.wbALUOrMemOut
 
     execute.io.rdaddr := pipeline2.io.rdaddrOut
     execute.io.rs1Data := pipeline2.io.rs1Out
@@ -203,8 +267,8 @@ class RISCV extends Module {
     memory.io.memReadIn := pipeline3.io.memReadOut
     memory.io.wbFlagIn := pipeline3.io.wbFlagOut
     memory.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
-    
-    //control signals
+
+    // control signals
     pipeline4.io.widthSizeIn := pipeline3.io.widthSizeOut
     pipeline4.io.memWriteIn := pipeline3.io.memWriteOut
     pipeline4.io.memReadIn := pipeline3.io.memReadOut
@@ -236,7 +300,14 @@ class RISCV extends Module {
         execute.io.ALUOut
     )
 
-    uart.io.printOutRegs(0) := latchingALU
+    // Capture value exactly when user requests print
+    when(printRise) {
+        printRegsLatch := decoder.io.regsOut
+    }
+
+    uart.io.printOutRegs := printRegsLatch
+    uart.io.profilingData := profilingLatched
+
 }
 
 // generate Verilog
