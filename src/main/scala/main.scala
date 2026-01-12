@@ -146,7 +146,7 @@ class RISCV extends Module {
     decoder.io.pcIn := pipeline1.io.pcOut
 
     // Connecting Decoder - pipeline registers
-    pipeline2.io.rdaddrIn := decoder.io.rdaddrOut
+    pipeline2.io.rdaddrIn := decoder.io.rdAddrOut
     pipeline2.io.rs1In := decoder.io.rs1Out
     pipeline2.io.rs2In := decoder.io.rs2Out
     pipeline2.io.pcIn := decoder.io.pcOut
@@ -223,7 +223,7 @@ class RISCV extends Module {
     writeback.io.wbALUOrMemIn := pipeline4.io.wbALUOrMemOut
 
     writeback.io.ALUIn := pipeline4.io.ALUOut
-    writeback.io.rdaddr := pineline4.io.rdaddrOut
+    writeback.io.rdAddr := pipeline4.io.rdaddrOut
 
     // Connecting writeback - registerfile
     decoder.io.writeAddr := writeback.io.rfWAddr

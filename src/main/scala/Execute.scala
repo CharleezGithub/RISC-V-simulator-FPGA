@@ -30,7 +30,7 @@ class Execute extends Module {
     // Passing on relevant values 
     io.rdaddrOut := io.rdaddr
     io.pcOut := io.pcIn
-    io.ALUout := 0.U // Init value
+    io.ALUOut := 0.U // Init value
 
     switch(io.opcode) {
         // ---------------------------------------------(   R-type   )------------------------------------------------------
@@ -38,19 +38,19 @@ class Execute extends Module {
             switch(io.funct7) {
                 is("b0000000".U) {
                     switch(io.funct3) {
-                        is("b000".U) { io.ALUout := io.rs1Data + io.rs2Data }                                       // ADD
-                        is("b111".U) { io.ALUout := io.rs1Data & io.rs2Data }                                       // AND
-                        is("b110".U) { io.ALUout := io.rs1Data | io.rs2Data }                                       // OR
+                        is("b000".U) { io.ALUOut := io.rs1Data + io.rs2Data }                                       // ADD
+                        is("b111".U) { io.ALUOut := io.rs1Data & io.rs2Data }                                       // AND
+                        is("b110".U) { io.ALUOut := io.rs1Data | io.rs2Data }                                       // OR
                         is("b100".U) { io.ALUOut := io.rs1Data ^ io.rs2Data }                                       // XOR
                         is("b001".U) { io.ALUOut := io.rs1Data << io.rs2Data }                                      // SLL
                         is("b101".U) { io.ALUOut := io.rs1Data >> io.rs2Data }                                      // SRL
-                        is("b010".U) { io.ALUout := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
+                        is("b010".U) { io.ALUOut := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
                         is("b011".U) { /* SLTU */ }                                                                 // SLTU
                     }
                 }
                 is("b0100000".U) {
                     switch(io.funct3) {
-                        is("b000".U) { io.ALUout := io.rs1Data - io.rs2Data }                                       // SUB
+                        is("b000".U) { io.ALUOut := io.rs1Data - io.rs2Data }                                       // SUB
                         is("b101".U) { /* SRA */ }                                                                  // SRA
                     }
                 }

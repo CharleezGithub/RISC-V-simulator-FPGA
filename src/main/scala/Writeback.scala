@@ -20,7 +20,7 @@ class Writeback extends Module {
         val rfWEn = Output(Bool())
     })
     // Data will be sent to certain address in register file when enable signal true
-    io.rfData := io.ALUin
+    io.rfWData := io.ALUIn
     io.rfWAddr := io.rdAddr
     io.rfWEn := io.wbFlagIn
 }
