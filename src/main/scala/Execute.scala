@@ -27,7 +27,7 @@ class Execute extends Module {
         val pcOut = Output(UInt(32.W))
     })
 
-    // Passing on relevant values
+    // Passing on relevant values 
     io.rdaddrOut := io.rdaddr
     io.pcOut := io.pcIn
     io.ALUout := 0.U // Init value
@@ -41,7 +41,7 @@ class Execute extends Module {
                         is("b000".U) { io.ALUout := io.rs1Data + io.rs2Data }                                       // ADD
                         is("b111".U) { io.ALUout := io.rs1Data & io.rs2Data }                                       // AND
                         is("b110".U) { io.ALUout := io.rs1Data | io.rs2Data }                                       // OR
-                        is("b100".U) { /* XOR */ }                                                                  // XOR
+                        is("b100".U) { io.ALUOut := io.rs1Data ^ io.rs2Data }                                                                  // XOR
                         is("b001".U) { /* SLL */ }                                                                  // SLL
                         is("b101".U) { /* SRL */ }                                                                  // SRL
                         is("b010".U) { io.ALUout := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
@@ -60,9 +60,9 @@ class Execute extends Module {
         // ---------------------------------------------(   I-type   )------------------------------------------------------
         is("b0010011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUout := io.rs1Data + io.immI }                                                  // ADDI
-                is("b111".U) { io.ALUout := io.rs1Data & io.immI }                                                  // ANDI
-                is("b110".U) { io.ALUout := io.rs1Data | io.immI }                                                  // ORI
+                is("b000".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // ADDI
+                is("b111".U) { io.ALUOut := io.rs1Data & io.immI }                                                  // ANDI
+                is("b110".U) { io.ALUOut := io.rs1Data | io.immI }                                                  // ORI
                 is("b100".U) { /* XORI */ }                                                                         // XORI
                 is("b010".U) { /* SLTI */ }                                                                         // SLTI
                 is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
