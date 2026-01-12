@@ -59,6 +59,21 @@ class ID_EX extends Module {
         val immUOut = Output(UInt(32.W))
         val immJOut = Output(UInt(32.W))
 
+
+        //Control signals input for reg
+        val widthSizeIn = Input(UInt(2.W))
+        val memWriteIn = Input(Bool())
+        val memReadIn = Input(Bool())
+        val wbFlagIn = Input(Bool())
+        val wbALUOrMemIn = Input(Bool())
+
+        //Control signals output for reg
+        val widthSizeOut = Output(UInt(2.W))
+        val memWriteOut = Output(Bool())
+        val memReadOut = Output(Bool())
+        val wbFlagOut = Output(Bool())
+        val wbALUOrMemOut = Output(Bool())
+
     })
     // Pipeline Registers
     val rdaddrReg = RegInit(0.U(8.W))
@@ -77,7 +92,7 @@ class ID_EX extends Module {
     val immJReg = RegInit(0.U((32.W)))
 
     // Connecting input to register
-    rdaddrReg = io.rdaddrIn
+    rdaddrReg := io.rdaddrIn
     rs1Reg := io.rs1In
     rs2Reg := io.rs2In
     pcInReg := io.pcIn
@@ -107,6 +122,26 @@ class ID_EX extends Module {
     io.immBOut := immBReg
     io.immUOut := immUReg
     io.immJOut := immJReg
+
+
+    // Regs and outputs for control signals
+    val widthsizeReg = RegInit(UInt(2.W))
+    val memWriteReg = RegInit(Bool())
+    val memReadReg = RegInit(Bool())
+    val wbFlagReg = RegInit(Bool())
+    val wbALUorMemReg = RegInit(Bool())
+
+    widthsizeReg := io.widthSizeIn
+    memWriteReg := io.memReadIn
+    memReadReg := io.memReadIn
+    wbFlagReg := io.wbFlagIn
+    wbALUorMemReg := io.wbALUOrMemIn
+
+    io.widthSizeOut := widthsizeReg
+    io.memWriteOut := memWriteReg
+    io.memReadOut := memReadReg
+    io.wbFlagOut := wbFlagReg
+    io.wbALUOrMemOut := wbALUorMemReg
 }
 
 object ID_EX extends App {
@@ -122,6 +157,21 @@ class EX_MEM extends Module {
         val rdaddrOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
+
+
+        //Control signals input for reg
+        val widthSizeIn = Input(UInt(2.W))
+        val memWriteIn = Input(Bool())
+        val memReadIn = Input(Bool())
+        val wbFlagIn = Input(Bool())
+        val wbALUOrMemIn = Input(Bool())
+
+        //Control signals output for reg
+        val widthSizeOut = Output(UInt(2.W))
+        val memWriteOut = Output(Bool())
+        val memReadOut = Output(Bool())
+        val wbFlagOut = Output(Bool())
+        val wbALUOrMemOut = Output(Bool())        
     })
     // Registers
     val rdaddrReg = RegInit(0.U(8.W))
@@ -137,6 +187,25 @@ class EX_MEM extends Module {
     io.rdaddrOut := rdaddrReg
     io.ALUOut := ALUReg
     io.pcOut := pcReg
+
+    // Regs and outputs for control signals
+    val widthsizeReg = RegInit(UInt(2.W))
+    val memWriteReg = RegInit(Bool())
+    val memReadReg = RegInit(Bool())
+    val wbFlagReg = RegInit(Bool())
+    val wbALUorMemReg = RegInit(Bool())
+
+    widthsizeReg := io.widthSizeIn
+    memWriteReg := io.memReadIn
+    memReadReg := io.memReadIn
+    wbFlagReg := io.wbFlagIn
+    wbALUorMemReg := io.wbALUOrMemIn
+
+    io.widthSizeOut := widthsizeReg
+    io.memWriteOut := memWriteReg
+    io.memReadOut := memReadReg
+    io.wbFlagOut := wbFlagReg
+    io.wbALUOrMemOut := wbALUorMemReg
 }
 object EX_MEM extends App {
     emitVerilog(new EX_MEM())
@@ -151,6 +220,21 @@ class MEM_WB extends Module {
 
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(8.W))
+
+
+        //Control signals input for reg
+        val widthSizeIn = Input(UInt(2.W))
+        val memWriteIn = Input(Bool())
+        val memReadIn = Input(Bool())
+        val wbFlagIn = Input(Bool())
+        val wbALUOrMemIn = Input(Bool())
+
+        //Control signals output for reg
+        val widthSizeOut = Output(UInt(2.W))
+        val memWriteOut = Output(Bool())
+        val memReadOut = Output(Bool())
+        val wbFlagOut = Output(Bool())
+        val wbALUOrMemOut = Output(Bool())        
     })
     // Registers
     val ALUReg = RegInit(0.U(32.W))
@@ -163,6 +247,25 @@ class MEM_WB extends Module {
     // Connecting output to registers
     io.ALUOut := ALUReg
     io.rdaddrOut := rdaddrReg
+    
+    // Regs and outputs for control signals
+    val widthsizeReg = RegInit(UInt(2.W))
+    val memWriteReg = RegInit(Bool())
+    val memReadReg = RegInit(Bool())
+    val wbFlagReg = RegInit(Bool())
+    val wbALUorMemReg = RegInit(Bool())
+
+    widthsizeReg := io.widthSizeIn
+    memWriteReg := io.memReadIn
+    memReadReg := io.memReadIn
+    wbFlagReg := io.wbFlagIn
+    wbALUorMemReg := io.wbALUOrMemIn
+
+    io.widthSizeOut := widthsizeReg
+    io.memWriteOut := memWriteReg
+    io.memReadOut := memReadReg
+    io.wbFlagOut := wbFlagReg
+    io.wbALUOrMemOut := wbALUorMemReg
 }
 object MEM_WB extends App {
     emitVerilog(new MEM_WB())
