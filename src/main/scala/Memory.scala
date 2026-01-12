@@ -12,6 +12,12 @@ class Memory extends Module {
         // Outputs
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(8.W))
+
+        val widthSizeIn = Input(UInt(2.W))
+        val memWriteIn = Input(Bool())
+        val memReadIn = Input(Bool())
+        val wbFlagIn = Input(Bool())
+        val wbALUOrMemIn = Input(Bool())
     })
     // passing values 
     io.ALUOut := io.ALUIn

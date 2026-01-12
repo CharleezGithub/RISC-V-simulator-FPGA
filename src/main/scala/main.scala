@@ -204,6 +204,12 @@ class RISCV extends Module {
     // Connecting pipeline registers - Memory
     memory.io.ALUIn := pipeline3.io.ALUOut
     memory.io.rdaddrIn := pipeline3.io.rdaddrOut
+    memory.io.widthSizeIn := pipeline3.io.widthSizeOut
+    memory.io.memWriteIn := pipeline3.io.memWriteOut
+    memory.io.memReadIn := pipeline3.io.memReadOut
+    memory.io.wbFlagIn := pipeline3.io.wbFlagOut
+    memory.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
+    
         //control signals
     pipeline4.io.widthSizeIn := pipeline3.io.widthSizeOut
     pipeline4.io.memWriteIn := pipeline3.io.memWriteOut
@@ -216,8 +222,15 @@ class RISCV extends Module {
     pipeline4.io.rdaddrIn := memory.io.rdaddrOut
 
     // Connecting pipeline registers - Write-back
+    writeback.io.widthSizeIn := pipeline4.io.widthSizeOut
+    writeback.io.memWriteIn := pipeline4.io.memWriteOut
+    writeback.io.memReadIn := pipeline4.io.memReadOut
+    writeback.io.wbFlagIn := pipeline4.io.wbFlagOut
+    writeback.io.wbALUOrMemIn := pipeline4.io.wbALUOrMemOut
+
     writeback.io.ALUIn := pipeline4.io.ALUOut
     writeback.io.rdaddr := pineline4.io.rdaddrOut
+
 
     latchingALU := Mux(
         execute.io.ALUOut === 0.U,
