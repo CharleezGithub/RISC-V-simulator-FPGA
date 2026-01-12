@@ -6,7 +6,7 @@ class Decode extends Module {
         val pcIn = Input(UInt(32.W))
         val instrIn = Input(UInt(32.W))
 
-        // Control unit inputs
+        // Control unit inputs 
         val writeData = Input(UInt(32.W))
         val writeFlag = Input(Bool())
         val writeAddr = Input(UInt(5.W))
@@ -51,7 +51,8 @@ class Decode extends Module {
     val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W)) // U-type: upper immediate
     val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5, 0), rs2(4, 1), 0.U) // J-type: jump immediate
 
-    // 32 register file intialization
+    //--------------------------------------------( Register file logic )--------------------------------------------------
+
     val regs = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
     // writing system for the 32 regs
     when(io.writeFlag === true.B) {
@@ -59,7 +60,9 @@ class Decode extends Module {
     }
     regs(0) := 0.U // hardwire x0 to 0
 
-    // write-read-bypass yap (double check later) & passing values
+    //---------------------------------------------------------------------------------------------------------------------
+
+    // write-read-bypass yap (DOUBLE CHECK LATER!) & passing values
     io.rs1Out := Mux(
         io.writeFlag && (io.writeAddr === rs1) && (io.writeAddr =/= 0.U),
         io.writeData,
@@ -71,7 +74,7 @@ class Decode extends Module {
         regs(rs1)
     )
     
-    // Control unit
+    //------------------------------------------------( Control Unit )-----------------------------------------------------
     io.memReadOut := false.B
     io.memWriteOut := false.B
     io.wbFlagOut := false.B
@@ -173,7 +176,7 @@ class Decode extends Module {
             io.wbALUOrMemOut := false.B   
         }
     }
-    
+
     // Forward all relevant values to next module 
     io.rdAddrOut := rdAddr
     io.funct3Out := funct3
