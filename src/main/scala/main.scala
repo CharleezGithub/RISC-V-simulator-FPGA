@@ -256,12 +256,14 @@ class RISCV extends Module {
 
     // Connecting Execute - pipeline registers
     pipeline3.io.rdaddrIn := execute.io.rdaddrOut
+    pipeline3.io.rs2DataIn := execute.io.rs2DataOut
     pipeline3.io.pcIn := execute.io.pcOut
     pipeline3.io.ALUIn := execute.io.ALUOut
 
     // Connecting pipeline registers - Memory
     memory.io.ALUIn := pipeline3.io.ALUOut
     memory.io.rdaddrIn := pipeline3.io.rdaddrOut
+    memory.io.rs2DataIn := pipeline3.io.rs2DataOut
     memory.io.widthSizeIn := pipeline3.io.widthSizeOut
     memory.io.memWriteIn := pipeline3.io.memWriteOut
     memory.io.memReadIn := pipeline3.io.memReadOut

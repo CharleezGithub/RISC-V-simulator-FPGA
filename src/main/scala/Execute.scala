@@ -23,12 +23,14 @@ class Execute extends Module {
 
         // Outputs
         val rdaddrOut = Output(UInt(8.W))
+        val rs2DataOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
     })
 
     // Passing on relevant values 
     io.rdaddrOut := io.rdaddr
+    io.rs2DataOut := io.rs2Data
     io.pcOut := io.pcIn
     io.ALUOut := 0.U // Init value
 

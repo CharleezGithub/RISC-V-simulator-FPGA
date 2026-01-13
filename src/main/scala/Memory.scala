@@ -8,6 +8,7 @@ class Memory extends Module {
         // Inputs
         val ALUIn = Input(UInt(32.W))
         val rdaddrIn = Input(UInt(8.W))
+        val rs2DataIn = Input(UInt(32.W))
 
         val widthSizeIn = Input(UInt(2.W))
         val memWriteIn = Input(Bool())
@@ -26,7 +27,7 @@ class Memory extends Module {
     // Calculate word address
     val wordAddr = io.ALUIn(11,2) // divide by 4 for word index
     val byteOffset = io.ALUIn(1,0)
-    
+
     // Simple data memory 
     val mem = Mem(64, UInt(32.W)) // Change to 1024 when done
     // Read old word for partial writes

@@ -148,13 +148,11 @@ object ID_EX extends App {
 
 class EX_MEM extends Module {
     val io = IO(new Bundle {
+        // Inputs
         val rdaddrIn = Input(UInt(8.W))
+        val rs2DataIn = Input(UInt(32.W))
         val ALUIn = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
-
-        val rdaddrOut = Output(UInt(32.W))
-        val ALUOut = Output(UInt(32.W))
-        val pcOut = Output(UInt(32.W))
 
         // Control signals input for reg
         val widthSizeIn = Input(UInt(2.W))
@@ -162,6 +160,12 @@ class EX_MEM extends Module {
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
         val wbALUOrMemIn = Input(Bool())
+
+        // Outputs
+        val rdaddrOut = Output(UInt(32.W))
+        val rs2DataOut = Output(UInt(32.W))
+        val ALUOut = Output(UInt(32.W))
+        val pcOut = Output(UInt(32.W))
 
         // Control signals output for reg
         val widthSizeOut = Output(UInt(2.W))
@@ -172,16 +176,19 @@ class EX_MEM extends Module {
     })
     // Registers
     val rdaddrReg = RegInit(0.U(8.W))
+    val rs2DataReg = RegInit(0.U(32.W))
     val ALUReg = RegInit(0.U(32.W))
     val pcReg = RegInit(0.U(32.W))
 
     // Connecting input to registers
     rdaddrReg := io.rdaddrIn
+    rs2DataReg := io.rs2DataIn
     pcReg := io.pcIn
     ALUReg := io.ALUIn
 
     // Connecting output to registers
     io.rdaddrOut := rdaddrReg
+    io.rs2DataOut := rs2DataReg
     io.ALUOut := ALUReg
     io.pcOut := pcReg
 
