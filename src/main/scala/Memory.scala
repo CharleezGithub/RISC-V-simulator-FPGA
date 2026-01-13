@@ -20,6 +20,7 @@ class Memory extends Module {
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(8.W))
         val memOut = Output(Vec(64, UInt(32.W))) // For UART printing
+        val loadDataOut = Output(UInt(32.W))
     })
     // passing values
     io.ALUOut := io.ALUIn
@@ -56,6 +57,33 @@ class Memory extends Module {
     }
     io.memOut := mem
     // -----------------------------------------------------------------------------------------------------------------------
+
+
+     // -----------------------------------------(   Load logic   )--------------------------------------------------
+
+        val loadData = Wire(UInt(32.W))
+        loadData := 0.U
+
+        when(io.memReadIn) {
+        switch(io.widthSizeIn) {
+            // BYTE
+            is("b00".U) {
+            loadData := (oldWord >> (byteOffset << 3)) & 0xFF.U
+            }
+
+            // HALFWORD
+            is("b01".U) {
+            loadData := (oldWord >> (byteOffset << 3)) & 0xFFFF.U
+            }
+
+            // WORD
+            is("b10".U) {
+            loadData := oldWord
+            }
+        }
+    }
+
+        io.loadDataOut := loadData
 }
 
 object Memory extends App {

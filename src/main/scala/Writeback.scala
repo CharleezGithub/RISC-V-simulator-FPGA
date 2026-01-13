@@ -12,6 +12,7 @@ class Writeback extends Module {
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
         val wbALUOrMemIn = Input(Bool()) // rfEnable logic
+        val memDataIn = Input(UInt(32.W))
 
         // To register file
         val rfWAddr = Output(UInt(5.W))
@@ -20,7 +21,7 @@ class Writeback extends Module {
     })
     // Data will be sent to certain address in register file when enable signal true
     io.rfWData := io.ALUIn
-    io.rfWAddr := io.rdAddr
+    io.rfWData := Mux(io.wbALUOrMemIn, io.memDataIn, io.ALUIn)
     io.rfWEn := io.wbFlagIn
 }
 
