@@ -19,20 +19,21 @@ class Memory extends Module {
         // Outputs
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(8.W))
+        val memOut = Output(Vec(64, UInt(32.W)))
     })
-    // passing values 
+    // passing values
     io.ALUOut := io.ALUIn
     io.rdaddrOut := io.rdaddrIn
 
     // Calculate word address
-    val wordAddr = io.ALUIn(11,2) // divide by 4 for word index
-    val byteOffset = io.ALUIn(1,0)
+    val wordAddr = io.ALUIn(11, 2) // divide by 4 for word index
+    val byteOffset = io.ALUIn(1, 0)
 
-    // Simple data memory 
-    val mem = Mem(64, UInt(32.W)) // Change to 1024 when done
+    // Simple data memory
+    // val mem = Mem(64, UInt(32.W)) // Change to 1024 when done
+    val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W))))
     // Read old word for partial writes
-    val oldWord = mem.read(wordAddr)
-
+    val oldWord = mem(wordAddr)
 
     // -----------------------------------------(   New-word generation   )--------------------------------------------------
     // We only do this when memwrite in is high meaning its a S-type
@@ -40,13 +41,19 @@ class Memory extends Module {
     newWord := oldWord // default
 
     when(io.memWriteIn) {
-        switch(io.widthSizeIn) { //byte, hw, w
-            is("b00".U) { newWord := (oldWord & ~(0xFF.U << (byteOffset*8))) | ((io.ALUIn & 0xFF.U) << (byteOffset*8)) } 
-            is("b01".U) { newWord := (oldWord & ~(0xFFFF.U << (byteOffset*8))) | ((io.ALUIn & 0xFFFF.U) << (byteOffset*8)) }
+        switch(io.widthSizeIn) { // byte, hw, w
+            is("b00".U) {
+                newWord := (oldWord & ~(0xff.U << (byteOffset * 8))) | ((io.ALUIn & 0xff.U) << (byteOffset * 8))
+            }
+            is("b01".U) {
+                newWord := (oldWord & ~(0xffff.U << (byteOffset * 8))) | ((io.ALUIn & 0xffff.U) << (byteOffset * 8))
+            }
             is("b10".U) { newWord := io.ALUIn }
+        }
+        mem(wordAddr) := newWord
+
+        io.memOut := mem
     }
-    mem.write(wordAddr, newWord)
-  }
 }
 
 object Memory extends App {
