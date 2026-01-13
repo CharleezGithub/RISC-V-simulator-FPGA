@@ -41,16 +41,12 @@ class Memory extends Module {
 
     when(io.memWriteIn) {
         switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) { newWord := (oldWord & ~(0xFF.U << (byteOffset * 8))) | ((io.rs2DataIn & 0xFF.U) << (byteOffset * 8)) }
-            is("b01".U) { newWord := (oldWord & ~(0xFFFF.U << (byteOffset * 8))) | ((io.rs2DataIn & 0xFFFF.U) << (byteOffset * 8)) }
+            is("b00".U) { newWord := (oldWord & ~(0xFF.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xFF.U) << (byteOffset << 3)) }
+            is("b01".U) { newWord := (oldWord & ~(0xFFFF.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xFFFF.U) << (byteOffset << 3))}
             is("b10".U) { newWord := io.rs2DataIn }
         }
-        // Write back to memory
         mem(wordAddr) := newWord
     }
-
-    // Always update memOut for visualization
-    io.memOut := mem
     //-----------------------------------------------------------------------------------------------------------------------
 }
 
