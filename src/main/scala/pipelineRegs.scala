@@ -217,6 +217,9 @@ object EX_MEM extends App {
 
 class MEM_WB extends Module {
     val io = IO(new Bundle {
+        val memDataIn  = Input(UInt(32.W))
+        val memDataOut = Output(UInt(32.W))
+
         // val mem_read = Input(UInt(32.W))
         // val mem_write = Input(UInt(32.W))
         val ALUIn = Input(UInt(32.W))
@@ -257,13 +260,16 @@ class MEM_WB extends Module {
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
     val wbALUorMemReg = RegInit(false.B)
+    val memDataReg = RegInit(0.U(32.W))
 
+    memDataReg := io.memDataIn
     widthsizeReg := io.widthSizeIn
     memWriteReg := io.memReadIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn
 
+    io.memDataOut := memDataReg
     io.widthSizeOut := widthsizeReg
     io.memWriteOut := memWriteReg
     io.memReadOut := memReadReg
