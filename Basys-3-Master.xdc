@@ -83,6 +83,9 @@ set_property -dict { PACKAGE_PIN U18 IOSTANDARD LVCMOS33 } [get_ports io_runProg
 # btnR Print out regs
 set_property -dict { PACKAGE_PIN T17 IOSTANDARD LVCMOS33 } [get_ports io_printRegs]
 
+# btnU Print out regs
+set_property -dict { PACKAGE_PIN T18 IOSTANDARD LVCMOS33 } [get_ports io_printMem]
+
 ##Pmod Header JA
 #set_property -dict { PACKAGE_PIN J1   IOSTANDARD LVCMOS33 } [get_ports {JA[0]}];#Sch name = JA1
 #set_property -dict { PACKAGE_PIN L2   IOSTANDARD LVCMOS33 } [get_ports {JA[1]}];#Sch name = JA2

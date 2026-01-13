@@ -30,7 +30,9 @@ class Memory extends Module {
     val byteOffset = io.ALUIn(1, 0)
 
     // Making datamemory as register
-    val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W)))) // Change to 1024 when done
+    val mem = RegInit(
+        VecInit(Seq.fill(64)(0.U(32.W)))
+    ) // Change to 1024 when done
     // Read old word for partial writes
     val oldWord = mem(wordAddr)
 
@@ -41,13 +43,19 @@ class Memory extends Module {
 
     when(io.memWriteIn) {
         switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) { newWord := (oldWord & ~(0xFF.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xFF.U) << (byteOffset << 3)) }
-            is("b01".U) { newWord := (oldWord & ~(0xFFFF.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xFFFF.U) << (byteOffset << 3))}
+            is("b00".U) {
+                newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3))
+            }
+            is("b01".U) {
+                newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3))
+            }
             is("b10".U) { newWord := io.rs2DataIn }
         }
         mem(wordAddr) := newWord
+
     }
-    //-----------------------------------------------------------------------------------------------------------------------
+    io.memOut := mem
+    // -----------------------------------------------------------------------------------------------------------------------
 }
 
 object Memory extends App {

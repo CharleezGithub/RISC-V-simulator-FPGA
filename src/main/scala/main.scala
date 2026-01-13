@@ -8,6 +8,7 @@ class RISCV extends Module {
         val readyToReadProgram = Input(Bool())
         val runProgram = Input(Bool())
         val printRegs = Input(Bool())
+        val printMem = Input(Bool())
 
         val tx = Output(Bool())
 
@@ -59,6 +60,10 @@ class RISCV extends Module {
     val printRise = io.printRegs && !printPrev
     printPrev := io.printRegs
 
+    val printMemPrev = RegInit(false.B)
+    val printMemRise = io.printMem && !printMemPrev
+    printMemPrev := io.printMem
+
     io.printRegLED := io.printRegs
 
     readyPrev := io.readyToReadProgram
@@ -83,6 +88,9 @@ class RISCV extends Module {
     }.elsewhen(printRise) {
         uartResponseType := 3.U
         captureActive := false.B
+    }.elsewhen(printMemRise) {
+        uartResponseType := 4.U
+        captureActive := false.B
     }
 
     when(runRise) {
@@ -98,6 +106,8 @@ class RISCV extends Module {
     when(runRise) {
         sendResponseReg := true.B
     }.elsewhen(printRise) {
+        sendResponseReg := true.B
+    }.elsewhen(printMemRise) {
         sendResponseReg := true.B
     }.elsewhen(profilingPending && !uart.io.busy) {
         sendResponseReg := true.B
@@ -133,6 +143,7 @@ class RISCV extends Module {
     val latchingALU = RegInit(0.U(32.W))
     // val printRegLatch = RegInit(0.U(32.W))
     val printRegsLatch = RegInit(VecInit(Seq.fill(32)(0.U(32.W))))
+    val printMemLatch = RegInit(VecInit(Seq.fill(64)(0.U(32.W))))
 
     // ---
     // RISC-V sim section
@@ -306,10 +317,13 @@ class RISCV extends Module {
     when(printRise) {
         printRegsLatch := decoder.io.regsOut
     }
+    when(printMemRise) {
+        printMemLatch := memory.io.memOut
+    }
 
     uart.io.printOutRegs := printRegsLatch
     uart.io.profilingData := profilingLatched
-
+    uart.io.dataMemory := printMemLatch
 }
 
 // generate Verilog

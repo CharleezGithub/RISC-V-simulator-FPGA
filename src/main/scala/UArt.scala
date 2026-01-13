@@ -18,6 +18,8 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
             Vec(3, UInt(32.W))
         ) // Clock Count, MemReadCount, MemWriteCount
 
+        val dataMemory = Input(Vec(64, UInt(32.W)))
+
         val printOutRegs = Input(Vec(32, UInt(32.W))) // Only 1 register for now
         val captureEnable = Input(Bool())
         val clearBuffer = Input(Bool())
@@ -67,7 +69,7 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     val rxStoredPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
     rxStoredPadded := VecInit(rxStored ++ Seq.fill(MAX_LEN - 32)(0.U))
 
-// Convert a 4-bit nibble to ASCII hex character
+    // Convert a 4-bit nibble to ASCII hex character
     def nibbleToAscii(nibble: UInt): UInt = {
         Mux(
             nibble < 10.U,
@@ -118,6 +120,49 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
         )
     }
 
+    // Print non-zero data memory as "0xADDR: 0xDATA\n"
+    def memPrintByte(i: UInt): UInt = {
+        val entryIdx = (i / 22.U)(5, 0)
+        val off = (i % 22.U)(4, 0)
+
+        val addr = (entryIdx << 2).asUInt.pad(32)
+        val data = io.dataMemory(entryIdx)
+
+        Mux(
+            data === 0.U,
+            0.U,
+            MuxLookup(
+                off,
+                0.U,
+                Array(
+                    0.U -> '0'.U,
+                    1.U -> 'x'.U,
+                    2.U -> nibbleToAscii(addr(31, 28)),
+                    3.U -> nibbleToAscii(addr(27, 24)),
+                    4.U -> nibbleToAscii(addr(23, 20)),
+                    5.U -> nibbleToAscii(addr(19, 16)),
+                    6.U -> nibbleToAscii(addr(15, 12)),
+                    7.U -> nibbleToAscii(addr(11, 8)),
+                    8.U -> nibbleToAscii(addr(7, 4)),
+                    9.U -> nibbleToAscii(addr(3, 0)),
+                    10.U -> ':'.U,
+                    11.U -> ' '.U,
+                    12.U -> '0'.U,
+                    13.U -> 'x'.U,
+                    14.U -> nibbleToAscii(data(31, 28)),
+                    15.U -> nibbleToAscii(data(27, 24)),
+                    16.U -> nibbleToAscii(data(23, 20)),
+                    17.U -> nibbleToAscii(data(19, 16)),
+                    18.U -> nibbleToAscii(data(15, 12)),
+                    19.U -> nibbleToAscii(data(11, 8)),
+                    20.U -> nibbleToAscii(data(7, 4)),
+                    21.U -> nibbleToAscii(data(3, 0)),
+                    22.U -> '\n'.U
+                )
+            )
+        )
+    }
+
     val printOutProfilingPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
 
     val clkLine = u32ToHexLine(io.profilingData(0))
@@ -135,7 +180,7 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
             printOutProfilingPadded,
             rxStoredPadded, // already Vec(32, UInt(8.W)) — pad rxStored to MAX_LEN too if needed
             strToVecPadded(""), // placeholder for printRegs
-            strToVecPadded("Invalid!\r\n")
+            strToVecPadded("")
         )
     )
 
@@ -145,7 +190,7 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
             33.U, // Profiling
             rxCount, // RX buffer length
             (32 * 11).U, // printRegs (32 registers)
-            11.U // "Invalid!\r\n"
+            (64 * 22).U // Print out the memory
         )
     )
 
@@ -172,6 +217,8 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     msgByte := msgVec(idx)
     when(msgSel === 3.U) {
         msgByte := regPrintByte(idx)
+    }.elsewhen(msgSel === 4.U) {
+        msgByte := memPrintByte(idx)
     }
 
     // Default TX signals
