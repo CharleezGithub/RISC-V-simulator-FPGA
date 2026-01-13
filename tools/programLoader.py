@@ -80,7 +80,7 @@ def data_parser(raw_data):
             out.append(f"0x{value:x}")
         return "\n".join(out)
 
-    except UnicodeDecodeError as err:
+    except Exception as err:
         print("Couldn't parse as ASCII, returning binary")
         return raw_data
 
