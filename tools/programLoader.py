@@ -62,7 +62,27 @@ def listen():
         if n > 0:
             data = ser.read(n)
             print("Received raw:", data)
-        time.sleep(0.05)
+            data_parsed = data_parser(data)
+            print("Parsed Data:\n" + str(data_parsed))
+
+        time.sleep(0.3)
+
+
+def data_parser(raw_data):
+    try:
+        text = raw_data.decode("ascii")
+
+        out = []
+        for line in text.splitlines():
+            if not line:
+                continue
+            value = int(line, 16)
+            out.append(f"0x{value:x}")
+        return "\n".join(out)
+
+    except UnicodeDecodeError as err:
+        print("Couldn't parse as ASCII, returning binary")
+        return raw_data
 
 
 # Close the port
