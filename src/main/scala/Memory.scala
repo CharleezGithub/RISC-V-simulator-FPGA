@@ -23,14 +23,31 @@ class Memory extends Module {
     io.ALUOut := io.ALUIn
     io.rdaddrOut := io.rdaddrIn
 
+    // Calculate word address
+    val wordAddr = io.ALUIn(11,2) // divide by 4 for word index
+    val byteOffset = io.ALUIn(1,0)
+    
     // Simple data memory 
     val mem = Mem(64, UInt(32.W)) // Change to 1024 when done
+    // Read old word for partial writes
+    val oldWord = mem.read(wordAddr)
 
 
+    // -----------------------------------------(   New-word generation   )--------------------------------------------------
+    // We only do this when memwrite in is high meaning its a S-type
+    val newWord = Wire(UInt(32.W))
+    newWord := oldWord // default
 
-
-
+    when(io.memWriteIn) {
+        switch(io.widthSizeIn) { //byte, hw, w
+            is("b00".U) { newWord := (oldWord & ~(0xFF.U << (byteOffset*8))) | ((io.ALUIn & 0xFF.U) << (byteOffset*8)) } 
+            is("b01".U) { newWord := (oldWord & ~(0xFFFF.U << (byteOffset*8))) | ((io.ALUIn & 0xFFFF.U) << (byteOffset*8)) }
+            is("b10".U) { newWord := io.ALUIn }
+    }
+    mem.write(wordAddr, newWord)
+  }
 }
+
 object Memory extends App {
     emitVerilog(new Memory())
 }
