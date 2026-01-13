@@ -40,11 +40,17 @@ class RISCV extends Module {
     io.listeningLED := false.B
     io.runningLED := false.B
 
+    val printRegsPending = RegInit(false.B)
+    val printMemPending = RegInit(false.B)
+
+    val printMemLock = RegInit(false.B)
+
     val sendResponseReg = RegInit(false.B)
 
     // States
     val idle :: running :: listening :: finishingUp :: Nil = Enum(4)
     val state = RegInit(idle)
+    val drainCounter = RegInit(0.U(3.W))
 
     // flags
 
@@ -69,6 +75,9 @@ class RISCV extends Module {
     readyPrev := io.readyToReadProgram
     runPrev := io.runProgram
 
+    // Start UART and connect flags
+    val uart = Module(new Uart(100_000_000, 115200))
+
     // Start capturing/listening to uart
     val captureActive = RegInit(false.B)
     when(readyRise) {
@@ -79,6 +88,9 @@ class RISCV extends Module {
     when(runRise) {
         uartResponseType := 2.U
         captureActive := false.B
+        printRegsPending := false.B
+        printMemPending := false.B
+        drainCounter := 0.U
 
         // Reset profiling counters at program start
         clockCount := 0.U
@@ -86,10 +98,10 @@ class RISCV extends Module {
         memWriteCount := 0.U
 
     }.elsewhen(printRise) {
-        uartResponseType := 3.U
+        printRegsPending := true.B
         captureActive := false.B
-    }.elsewhen(printMemRise) {
-        uartResponseType := 4.U
+    }.elsewhen(printMemRise && !uart.io.busy) {
+        printMemPending := true.B
         captureActive := false.B
     }
 
@@ -97,18 +109,19 @@ class RISCV extends Module {
         state := running
     }
 
-    // Start UART and connect flags
-    val uart = Module(new Uart(100_000_000, 115200))
-
     // Default
     sendResponseReg := false.B
 
     when(runRise) {
         sendResponseReg := true.B
-    }.elsewhen(printRise) {
+    }.elsewhen(printRegsPending && !uart.io.busy) {
         sendResponseReg := true.B
-    }.elsewhen(printMemRise) {
+        uartResponseType := 3.U
+        printRegsPending := false.B
+    }.elsewhen(printMemPending && !uart.io.busy) {
         sendResponseReg := true.B
+        uartResponseType := 4.U
+        printMemPending := false.B
     }.elsewhen(profilingPending && !uart.io.busy) {
         sendResponseReg := true.B
         uartResponseType := 1.U // profiling
@@ -197,6 +210,7 @@ class RISCV extends Module {
                 profilingLatched(1) := memReadCount
                 profilingLatched(2) := memWriteCount
                 profilingPending := true.B
+                drainCounter := 4.U
             }
         }
         is(finishingUp) {
@@ -207,8 +221,16 @@ class RISCV extends Module {
         }
     }
 
+    when(state === finishingUp && drainCounter =/= 0.U) {
+        drainCounter := drainCounter - 1.U
+    }
+
+    val runEnable = (state === running) || (drainCounter =/= 0.U)
+
     // Connecting Fetch - pipeline registers
     fetch.io.program := instructionMemory
+    fetch.io.enable := runEnable
+    fetch.io.resetPC := runRise
     pipeline1.io.instrIn := fetch.io.instr
     pipeline1.io.pcIn := fetch.io.pcOut
 
@@ -306,7 +328,8 @@ class RISCV extends Module {
     // Connecting writeback - registerfile
     decoder.io.writeAddr := writeback.io.rfWAddr
     decoder.io.writeData := writeback.io.rfWData
-    decoder.io.writeFlag := writeback.io.rfWEn
+    val allowWriteback = runEnable
+    decoder.io.writeFlag := writeback.io.rfWEn && allowWriteback
 
     latchingALU := Mux(
         execute.io.ALUOut === 0.U,
@@ -314,11 +337,20 @@ class RISCV extends Module {
         execute.io.ALUOut
     )
 
-    // Capture value exactly when user requests print
-    when(printRise) {
-        printRegsLatch := decoder.io.regsOut
+    // Track print requests; latch data when UART is ready to send
+    when(printMemRise && !printMemLock) {
+        printMemPending := true.B
+        captureActive := false.B
+        printMemLock := true.B
     }
-    when(printMemRise) {
+
+    when(!io.printMem) {
+        printMemLock := false.B
+    }
+
+    when(printRegsPending && !uart.io.busy) {
+        printRegsLatch := decoder.io.regsOut
+    }.elsewhen(printMemPending && !uart.io.busy) {
         printMemLatch := memory.io.memOut
     }
 

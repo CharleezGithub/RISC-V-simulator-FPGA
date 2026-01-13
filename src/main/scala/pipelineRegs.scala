@@ -28,9 +28,9 @@ object IF_ID extends App {
 class ID_EX extends Module {
     val io = IO(new Bundle {
         // Inputs
-        val rdaddrIn = Input(UInt(8.W))
-        val rs1In = Input(UInt(8.W))
-        val rs2In = Input(UInt(8.W))
+        val rdaddrIn = Input(UInt(5.W))
+        val rs1In = Input(UInt(32.W))
+        val rs2In = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
 
         val opcodeIn = Input(UInt(32.W))
@@ -44,9 +44,9 @@ class ID_EX extends Module {
         val immJIn = Input(UInt(32.W))
 
         // Outputs
-        val rdaddrOut = Output(UInt(8.W))
-        val rs1Out = Output(UInt(8.W))
-        val rs2Out = Output(UInt(8.W))
+        val rdaddrOut = Output(UInt(5.W))
+        val rs1Out = Output(UInt(32.W))
+        val rs2Out = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
 
         val opcodeOut = Output(UInt(32.W))
@@ -75,9 +75,9 @@ class ID_EX extends Module {
 
     })
     // Pipeline Registers
-    val rdaddrReg = RegInit(0.U(8.W))
-    val rs1Reg = RegInit(0.U(8.W))
-    val rs2Reg = RegInit(0.U(8.W))
+    val rdaddrReg = RegInit(0.U(5.W))
+    val rs1Reg = RegInit(0.U(32.W))
+    val rs2Reg = RegInit(0.U(32.W))
     val pcInReg = RegInit(0.U((32.W)))
 
     val opcodeReg = RegInit(0.U((32.W)))
@@ -130,7 +130,7 @@ class ID_EX extends Module {
     val wbALUorMemReg = RegInit(false.B)
 
     widthsizeReg := io.widthSizeIn
-    memWriteReg := io.memReadIn
+    memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn
@@ -149,7 +149,7 @@ object ID_EX extends App {
 class EX_MEM extends Module {
     val io = IO(new Bundle {
         // Inputs
-        val rdaddrIn = Input(UInt(8.W))
+        val rdaddrIn = Input(UInt(5.W))
         val rs2DataIn = Input(UInt(32.W))
         val ALUIn = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
@@ -162,7 +162,7 @@ class EX_MEM extends Module {
         val wbALUOrMemIn = Input(Bool())
 
         // Outputs
-        val rdaddrOut = Output(UInt(32.W))
+        val rdaddrOut = Output(UInt(5.W))
         val rs2DataOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
@@ -175,7 +175,7 @@ class EX_MEM extends Module {
         val wbALUOrMemOut = Output(Bool())
     })
     // Registers
-    val rdaddrReg = RegInit(0.U(8.W))
+    val rdaddrReg = RegInit(0.U(5.W))
     val rs2DataReg = RegInit(0.U(32.W))
     val ALUReg = RegInit(0.U(32.W))
     val pcReg = RegInit(0.U(32.W))
@@ -200,7 +200,7 @@ class EX_MEM extends Module {
     val wbALUorMemReg = RegInit(false.B)
 
     widthsizeReg := io.widthSizeIn
-    memWriteReg := io.memReadIn
+    memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn
@@ -223,10 +223,10 @@ class MEM_WB extends Module {
         // val mem_read = Input(UInt(32.W))
         // val mem_write = Input(UInt(32.W))
         val ALUIn = Input(UInt(32.W))
-        val rdaddrIn = Input(UInt(8.W))
+        val rdaddrIn = Input(UInt(5.W))
 
         val ALUOut = Output(UInt(32.W))
-        val rdaddrOut = Output(UInt(8.W))
+        val rdaddrOut = Output(UInt(5.W))
 
         // Control signals input for reg
         val widthSizeIn = Input(UInt(2.W))
@@ -244,7 +244,7 @@ class MEM_WB extends Module {
     })
     // Registers
     val ALUReg = RegInit(0.U(32.W))
-    val rdaddrReg = RegInit(0.U(8.W))
+    val rdaddrReg = RegInit(0.U(5.W))
 
     // Connecting input to registers
     ALUReg := io.ALUIn
@@ -264,7 +264,7 @@ class MEM_WB extends Module {
 
     memDataReg := io.memDataIn
     widthsizeReg := io.widthSizeIn
-    memWriteReg := io.memReadIn
+    memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn

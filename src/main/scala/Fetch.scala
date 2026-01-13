@@ -4,6 +4,8 @@ import chisel3.util._
 class Fetch extends Module {
     val io = IO(new Bundle {
         val program = Input(Vec(64, UInt(32.W))) // full program memory
+        val enable = Input(Bool())
+        val resetPC = Input(Bool())
         val pcOut = Output(UInt(32.W)) // current PC to send to ID
         val instr = Output(UInt(32.W)) // fetched instruction
     })
@@ -18,11 +20,15 @@ class Fetch extends Module {
 
     // Default next PC = PC + 4 (sequential)
     val pcNext = Mux(branchEn, branchAddr, pcReg + 4.U)
-    pcReg := Mux(
-        flush,
-        0.U,
-        pcNext
-    ) // here we let current PC increment unless flush is true
+    when(io.resetPC) {
+        pcReg := 0.U
+    }.elsewhen(io.enable) {
+        pcReg := Mux(
+            flush,
+            0.U,
+            pcNext
+        ) // here we let current PC increment unless flush is true
+    }
 
     // Output current PC
     io.pcOut := pcReg

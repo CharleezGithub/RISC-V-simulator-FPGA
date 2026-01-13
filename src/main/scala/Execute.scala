@@ -5,7 +5,7 @@ class Execute extends Module {
     val io = IO(new Bundle {
 
         // Instruction inputs and pc
-        val rdaddr = Input(UInt(8.W))
+        val rdaddr = Input(UInt(5.W))
         val rs1Data = Input(UInt(32.W))
         val rs2Data = Input(UInt(32.W))
         val pcIn = Input(UInt(32.W))
@@ -22,7 +22,7 @@ class Execute extends Module {
         val immJ = Input(UInt(32.W))
 
         // Outputs
-        val rdaddrOut = Output(UInt(8.W))
+        val rdaddrOut = Output(UInt(5.W))
         val rs2DataOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))

@@ -23,7 +23,7 @@ class Decode extends Module {
         val immBOut = Output(UInt(32.W))
         val immUOut = Output(UInt(32.W))
         val immJOut = Output(UInt(32.W))
-        val rdAddrOut = Output(UInt(8.W))
+        val rdAddrOut = Output(UInt(5.W))
 
         // Control unit outputs
         val widthSizeOut = Output(
@@ -51,7 +51,7 @@ class Decode extends Module {
     val funct7 = instr(31, 25)
 
     // immidate value generation
-    val immI = Cat(funct7, rs2) // I-type: instr[31:20]
+    val immI = Cat(Fill(20, instr(31)), instr(31, 20)) // I-type: sign-extended instr[31:20]
     val immS = Cat(funct7, rdAddr) // S-type: instr[31:25] ++ instr[11:7]
     val immB = Cat(
         funct7(6),

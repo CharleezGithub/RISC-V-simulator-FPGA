@@ -7,7 +7,7 @@ class Memory extends Module {
         // val mem_write = Input(Bool())
         // Inputs
         val ALUIn = Input(UInt(32.W))
-        val rdaddrIn = Input(UInt(8.W))
+        val rdaddrIn = Input(UInt(5.W))
         val rs2DataIn = Input(UInt(32.W))
 
         val widthSizeIn = Input(UInt(2.W))
@@ -18,7 +18,7 @@ class Memory extends Module {
 
         // Outputs
         val ALUOut = Output(UInt(32.W))
-        val rdaddrOut = Output(UInt(8.W))
+        val rdaddrOut = Output(UInt(5.W))
         val memOut = Output(Vec(64, UInt(32.W))) // For UART printing
         val loadDataOut = Output(UInt(32.W))
     })
