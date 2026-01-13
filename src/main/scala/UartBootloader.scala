@@ -17,14 +17,25 @@ class UartBootloader extends Module {
     val active = RegInit(false.B)
     val doneReg = RegInit(false.B)
 
-    io.memWriteEn := false.B
-    io.memWriteAddr := wordAddr
-    io.memWriteData := Cat(
+    val assembledWord = Wire(UInt(32.W))
+    assembledWord := Cat(
         byteBuffer(3),
         byteBuffer(2),
         byteBuffer(1),
         byteBuffer(0)
     )
+    when(active && io.rxValid && byteIdx === 3.U) {
+        assembledWord := Cat(
+            io.rxData,
+            byteBuffer(2),
+            byteBuffer(1),
+            byteBuffer(0)
+        )
+    }
+
+    io.memWriteEn := false.B
+    io.memWriteAddr := wordAddr
+    io.memWriteData := assembledWord
     io.done := doneReg
 
     when(io.start) {
