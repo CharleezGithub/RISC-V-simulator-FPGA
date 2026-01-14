@@ -82,9 +82,18 @@ class Execute extends Module {
         // ---------------------------------------------(   S-type   )------------------------------------------------------
         is("b0100011".U) {
             switch(io.funct3) {
-                    is("b000".U) { io.ALUOut := io.rs1Data + io.immS }                                              // SB
-                    is("b001".U) { io.ALUOut := io.rs1Data + io.immS }                                              // SH
-                    is("b010".U) { io.ALUOut := io.rs1Data + io.immS }                                              // SW
+                is("b000".U) { io.ALUOut := io.rs1Data + io.immS }                                                  // SB
+                is("b001".U) { io.ALUOut := io.rs1Data + io.immS }                                                  // SH
+                is("b010".U) { io.ALUOut := io.rs1Data + io.immS }                                                  // SW
+            }
+        }
+
+        // ---------------------------------------------(   Loads   )------------------------------------------------------
+        is("b0000011".U) {
+            switch(io.funct3) {
+                is("b000".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // LB
+                is("b001".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // LH
+                is("b010".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // LW
             }
         }
 
