@@ -6,8 +6,6 @@ import chisel3.util._
 
 class Memory extends Module {
     val io = IO(new Bundle {
-        // val mem_read = Input(Bool())
-        // val mem_write = Input(Bool())
         // Inputs
         val ALUIn = Input(UInt(32.W))
         val rdaddrIn = Input(UInt(5.W))
@@ -35,10 +33,10 @@ class Memory extends Module {
 
     // Making datamemory as register
     val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W)))) // Change to 1024 when done
-    // Read old word for partial writes
-    val oldWord = mem(wordAddr)
 
     // -----------------------------------------(   New-word generation   )--------------------------------------------------
+    // Read old word for partial writes
+    val oldWord = mem(wordAddr)
     // We only do this when memwrite in is high meaning its a S-type
     val newWord = Wire(UInt(32.W))
     newWord := oldWord // default
@@ -55,30 +53,20 @@ class Memory extends Module {
     io.memOut := mem
 
     // ------------------------------------------(   Load-word fetching   )---------------------------------------------------
+    // Read old word for partial writes
+    val loadWord = mem(wordAddr)
+    // We only do this when memRead in is high 
+    val loadData = Wire(UInt(32.W))
+    loadData := 0.U
 
-        val loadData = Wire(UInt(32.W))
-        loadData := 0.U
-
-        when(io.memReadIn) {
-        switch(io.widthSizeIn) {
-            // BYTE
-            is("b00".U) {
-            loadData := (oldWord >> (byteOffset << 3)) & 0xFF.U
-            }
-
-            // HALFWORD
-            is("b01".U) {
-            loadData := (oldWord >> (byteOffset << 3)) & 0xFFFF.U
-            }
-
-            // WORD
-            is("b10".U) {
-            loadData := oldWord
-            }
+    when(io.memReadIn) {
+        switch(io.widthSizeIn) { // byte, halfword, word
+            is("b00".U) { loadData := Cat(Fill(24, loadWord((byteOffset << 3) + 7)), loadWord((byteOffset << 3) + 7, (byteOffset << 3))) }
+            is("b01".U) { loadData := Cat(Fill(16, loadWord((byteOffset << 3) + 15)), loadWord((byteOffset << 3) + 15, (byteOffset << 3))) }
+            is("b10".U) { loadData := loadWord }
         }
     }
-
-        io.loadDataOut := loadData
+    io.loadDataOut := loadData
 }
 
 object Memory extends App {
