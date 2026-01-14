@@ -1,13 +1,10 @@
 package empty
 
-
 import chisel3._
 import chisel3.util._
 
 class Memory extends Module {
     val io = IO(new Bundle {
-        // val mem_read = Input(Bool())
-        // val mem_write = Input(Bool())
         // Inputs
         val ALUIn = Input(UInt(32.W))
         val rdaddrIn = Input(UInt(5.W))
@@ -34,19 +31,25 @@ class Memory extends Module {
     val byteOffset = io.ALUIn(1, 0)
 
     // Making datamemory as register
-    val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W)))) // Change to 1024 when done
-    // Read old word for partial writes
-    val oldWord = mem(wordAddr)
+    val mem = RegInit(
+        VecInit(Seq.fill(64)(0.U(32.W)))
+    ) // Change to 1024 when done
 
     // -----------------------------------------(   New-word generation   )--------------------------------------------------
+    // Read old word for partial writes
+    val oldWord = mem(wordAddr)
     // We only do this when memwrite in is high meaning its a S-type
     val newWord = Wire(UInt(32.W))
     newWord := oldWord // default
 
     when(io.memWriteIn) {
         switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) { newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3)) }
-            is("b01".U) { newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3)) }
+            is("b00".U) {
+                newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3))
+            }
+            is("b01".U) {
+                newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3))
+            }
             is("b10".U) { newWord := io.rs2DataIn }
         }
         mem(wordAddr) := newWord
@@ -55,30 +58,33 @@ class Memory extends Module {
     io.memOut := mem
 
     // ------------------------------------------(   Load-word fetching   )---------------------------------------------------
-
-        val loadData = Wire(UInt(32.W))
-        loadData := 0.U
-
-        when(io.memReadIn) {
+    // Read old word for partial writes
+    val loadWord = mem(wordAddr)
+    // We only do this when memRead in is high
+    val loadData = Wire(UInt(32.W))
+    loadData := 0.U
+    when(io.memReadIn) {
         switch(io.widthSizeIn) {
-            // BYTE
-            is("b00".U) {
-            loadData := (oldWord >> (byteOffset << 3)) & 0xFF.U
+
+            is("b00".U) { // byte
+                val shifted = loadWord >> (byteOffset << 3)
+                val byte = shifted(7, 0)
+                loadData := Cat(Fill(24, byte(7)), byte)
             }
 
-            // HALFWORD
-            is("b01".U) {
-            loadData := (oldWord >> (byteOffset << 3)) & 0xFFFF.U
+            is("b01".U) { // halfword
+                val shifted = loadWord >> (byteOffset << 3)
+                val half = shifted(15, 0)
+                loadData := Cat(Fill(16, half(15)), half)
             }
 
-            // WORD
-            is("b10".U) {
-            loadData := oldWord
+            is("b10".U) { // word
+                loadData := loadWord
             }
         }
     }
 
-        io.loadDataOut := loadData
+    io.loadDataOut := loadData
 }
 
 object Memory extends App {

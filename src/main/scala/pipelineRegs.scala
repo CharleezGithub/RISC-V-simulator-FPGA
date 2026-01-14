@@ -219,23 +219,20 @@ object EX_MEM extends App {
 
 class MEM_WB extends Module {
     val io = IO(new Bundle {
-        val memDataIn  = Input(UInt(32.W))
-        val memDataOut = Output(UInt(32.W))
-
-        // val mem_read = Input(UInt(32.W))
-        // val mem_write = Input(UInt(32.W))
-        val ALUIn = Input(UInt(32.W))
-        val rdaddrIn = Input(UInt(5.W))
-
-        val ALUOut = Output(UInt(32.W))
-        val rdaddrOut = Output(UInt(5.W))
-
         // Control signals input for reg
         val widthSizeIn = Input(UInt(2.W))
         val memWriteIn = Input(Bool())
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
         val wbALUOrMemIn = Input(Bool())
+
+        val ALUIn = Input(UInt(32.W))
+        val rdaddrIn = Input(UInt(5.W))
+        val loadDataIn = Input(UInt(32.W))
+
+        val ALUOut = Output(UInt(32.W))
+        val rdaddrOut = Output(UInt(5.W))
+        val loadDataOut = Output(UInt(32.W))
 
         // Control signals output for reg
         val widthSizeOut = Output(UInt(2.W))
@@ -247,14 +244,17 @@ class MEM_WB extends Module {
     // Registers
     val ALUReg = RegInit(0.U(32.W))
     val rdaddrReg = RegInit(0.U(5.W))
+    val loadDataReg = RegInit(0.U(32.W))
 
     // Connecting input to registers
     ALUReg := io.ALUIn
     rdaddrReg := io.rdaddrIn
+    loadDataReg := io.loadDataIn
 
     // Connecting output to registers
     io.ALUOut := ALUReg
     io.rdaddrOut := rdaddrReg
+    io.loadDataOut := loadDataReg
 
     // Regs and outputs for control signals
     val widthsizeReg = RegInit(0.U(2.W))
@@ -262,16 +262,13 @@ class MEM_WB extends Module {
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
     val wbALUorMemReg = RegInit(false.B)
-    val memDataReg = RegInit(0.U(32.W))
 
-    memDataReg := io.memDataIn
     widthsizeReg := io.widthSizeIn
     memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn
 
-    io.memDataOut := memDataReg
     io.widthSizeOut := widthsizeReg
     io.memWriteOut := memWriteReg
     io.memReadOut := memReadReg

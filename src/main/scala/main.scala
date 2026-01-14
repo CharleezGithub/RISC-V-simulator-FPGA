@@ -270,7 +270,7 @@ class RISCV extends Module {
     // control signals
     pipeline3.io.widthSizeIn := pipeline2.io.widthSizeOut
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
-    pipeline3.io.memReadIn := pipeline2.io.memReadIn
+    pipeline3.io.memReadIn := pipeline2.io.memReadOut
     pipeline3.io.wbFlagIn := pipeline2.io.wbFlagOut
     pipeline3.io.wbALUOrMemIn := pipeline2.io.wbALUOrMemOut
 
@@ -313,6 +313,7 @@ class RISCV extends Module {
     pipeline4.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
 
     // Connecting Memory - pipeline registers
+    pipeline4.io.loadDataIn := memory.io.loadDataOut
     pipeline4.io.ALUIn := memory.io.ALUOut
     pipeline4.io.rdaddrIn := memory.io.rdaddrOut
 
@@ -325,7 +326,7 @@ class RISCV extends Module {
 
     writeback.io.ALUIn := pipeline4.io.ALUOut
     writeback.io.rdAddr := pipeline4.io.rdaddrOut
-    writeback.io.memDataIn := pipeline4.io.memDataOut
+    writeback.io.loadDataIn := pipeline4.io.loadDataOut
 
     // Connecting writeback - registerfile
     decoder.io.writeAddr := writeback.io.rfWAddr

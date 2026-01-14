@@ -14,16 +14,10 @@ class EndToEndCPUTest extends AnyFlatSpec with ChiselScalatestTester {
                 "h006283B3".U(32.W) // add  x7, x5, x6
             )
 
-            // Pad it to length of 64
-            val program = RegInit(
-                VecInit(
-                    programWords ++ Seq.fill(64 - programWords.length)(
-                        0.U(32.W)
-                    )
-                )
-            )
-
-            dut.instructionMemory.poke(program)
+            // Load program into instruction memory
+            for ((inst, i) <- programWords.zipWithIndex) {
+                dut.instructionMemory(i).poke(inst)
+            }
 
             dut.clock.step(10)
 

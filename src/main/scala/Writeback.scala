@@ -6,24 +6,25 @@ import chisel3.util._
 class Writeback extends Module {
     val io = IO(new Bundle {
         // Inputs
+        val loadDataIn = Input(UInt(32.W))
         val ALUIn = Input(UInt(32.W))
         val rdAddr = Input(UInt(5.W))
-
         val widthSizeIn = Input(UInt(2.W))
         val memWriteIn = Input(Bool())
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
+
         val wbALUOrMemIn = Input(Bool()) // rfEnable logic
-        val memDataIn = Input(UInt(32.W))
 
         // To register file
         val rfWAddr = Output(UInt(5.W))
         val rfWData = Output(UInt(32.W))
         val rfWEn = Output(Bool())
+
     })
     // Data will be sent to certain address in register file when enable signal true
-    io.rfWData := io.ALUIn
-    io.rfWData := Mux(io.wbALUOrMemIn, io.memDataIn, io.ALUIn)
+    io.rfWAddr := io.rdAddr
+    io.rfWData := Mux(io.memReadIn, io.loadDataIn, io.ALUIn)
     io.rfWEn := io.wbFlagIn
 }
 
