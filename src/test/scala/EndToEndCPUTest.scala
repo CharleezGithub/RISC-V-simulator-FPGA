@@ -7,21 +7,26 @@ import org.scalatest.flatspec.AnyFlatSpec
 class EndToEndCPUTest extends AnyFlatSpec with ChiselScalatestTester {
 
     "RISCV" should "work" in {
-        test(new RISCV) { dut =>
-            val programWords = Seq(
-                "h00700313".U(32.W), // addi x6, x0, 7
-                "h00500293".U(32.W), // addi x5, x0, 5
-                "h006283B3".U(32.W) // add  x7, x5, x6
-            )
+        val programWords = Seq(
+            "h00700313".U(32.W), // addi x6, x0, 7
+            "h00500293".U(32.W), // addi x5, x0, 5
+            "h006283B3".U(32.W) // add  x7, x5, x6
+        )
 
-            // Load program into instruction memory
-            for ((inst, i) <- programWords.zipWithIndex) {
-                dut.instructionMemory(i).poke(inst)
-            }
+        test(new RISCV(programInit = programWords)) { dut =>
+            dut.io.rx.poke(false.B)
+            dut.io.readyToReadProgram.poke(false.B)
+            dut.io.printRegs.poke(false.B)
+            dut.io.printMem.poke(false.B)
+
+            // Pulse runProgram to start the pipeline
+            dut.io.runProgram.poke(true.B)
+            dut.clock.step(1)
+            dut.io.runProgram.poke(false.B)
 
             dut.clock.step(10)
 
-            dut.printRegsLatch(7).expect(13)
+            dut.decoder.io.regsOut(7).expect(13.U)
         }
     }
 }

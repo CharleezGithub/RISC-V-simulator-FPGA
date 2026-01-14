@@ -4,7 +4,7 @@ import chisel3._
 import chisel3.util._
 import chisel.lib.uart._
 
-class RISCV extends Module {
+class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     val io = IO(new Bundle {
         val rx = Input(Bool())
         val readyToReadProgram = Input(Bool())
@@ -21,7 +21,13 @@ class RISCV extends Module {
     })
     val profilingPending = RegInit(false.B)
 
-    val instructionMemory = RegInit(VecInit(Seq.fill(64)(0.U(32.W))))
+    require(
+        programInit.length <= 64,
+        s"programInit too large: ${programInit.length} > 64"
+    )
+    val instructionMemory = RegInit(
+        VecInit(programInit.padTo(64, 0.U(32.W)))
+    )
 
     // ---
     // Profiling
