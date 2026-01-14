@@ -53,8 +53,11 @@ class Decode extends Module {
     val funct7 = instr(31, 25)
 
     // immidate value generation
-    val immI = Cat(Fill(20, instr(31)), instr(31, 20)) // I-type: sign-extended instr[31:20]
-    val immS = Cat(instr(31,25), instr(11,7))
+    val immI = Cat(
+        Fill(20, instr(31)),
+        instr(31, 20)
+    ) // I-type: sign-extended instr[31:20]
+    val immS = Cat(instr(31, 25), instr(11, 7))
     val immB = Cat(
         funct7(6),
         rdAddr(0),
@@ -131,8 +134,7 @@ class Decode extends Module {
                     io.memWriteOut := false.B
                     io.wbFlagOut := true.B
                     io.wbALUOrMemOut := true.B
-                    io.widthSizeOut := "b10".U  // WORD
-}
+                    io.widthSizeOut := "b10".U // WORD
                 }
                 // LBU
                 is("b100".U) {
