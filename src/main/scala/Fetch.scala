@@ -22,14 +22,12 @@ class Fetch extends Module {
 
     // Default next PC = PC + 4 (sequential)
     val pcNext = Mux(branchEn, branchAddr, pcReg + 4.U)
+
     when(io.resetPC) {
         pcReg := 0.U
-    }.elsewhen(io.enable) {
-        pcReg := Mux(
-            flush,
-            0.U,
-            pcNext
-        ) // here we let current PC increment unless flush is true
+    }
+    .elsewhen(io.enable) {
+        pcReg := Mux(flush, 0.U, pcNext) // here we let current PC increment unless flush is true
     }
 
     // Output current PC
@@ -38,9 +36,6 @@ class Fetch extends Module {
     // Instruction fetch
     val instrIndex = pcReg >> 2
     io.instr := io.program(instrIndex)
-
-    // TEMP: hardcoded instruction (addi x1, x0, 0x123)
-    // io.instr := "h12300093".U
 }
 
 object Fetch extends App {

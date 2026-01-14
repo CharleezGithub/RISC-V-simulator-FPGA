@@ -260,7 +260,6 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     pipeline2.io.memWriteIn := decoder.io.memWriteOut
     pipeline2.io.memReadIn := decoder.io.memReadOut
     pipeline2.io.wbFlagIn := decoder.io.wbFlagOut
-    pipeline2.io.wbALUOrMemIn := decoder.io.wbALUOrMemOut
 
     pipeline2.io.opcodeIn := decoder.io.opcodeOut
     pipeline2.io.funct3In := decoder.io.funct3Out
@@ -278,7 +277,6 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
     pipeline3.io.memReadIn := pipeline2.io.memReadOut
     pipeline3.io.wbFlagIn := pipeline2.io.wbFlagOut
-    pipeline3.io.wbALUOrMemIn := pipeline2.io.wbALUOrMemOut
 
     execute.io.rdaddr := pipeline2.io.rdaddrOut
     execute.io.rs1Data := pipeline2.io.rs1Out
@@ -309,14 +307,11 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     memory.io.memWriteIn := pipeline3.io.memWriteOut
     memory.io.memReadIn := pipeline3.io.memReadOut
     memory.io.wbFlagIn := pipeline3.io.wbFlagOut
-    memory.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
 
     // control signals
     pipeline4.io.widthSizeIn := pipeline3.io.widthSizeOut
-    pipeline4.io.memWriteIn := pipeline3.io.memWriteOut
     pipeline4.io.memReadIn := pipeline3.io.memReadOut
     pipeline4.io.wbFlagIn := pipeline3.io.wbFlagOut
-    pipeline4.io.wbALUOrMemIn := pipeline3.io.wbALUOrMemOut
 
     // Connecting Memory - pipeline registers
     pipeline4.io.loadDataIn := memory.io.loadDataOut
@@ -325,10 +320,8 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     // Connecting pipeline registers - Write-back
     writeback.io.widthSizeIn := pipeline4.io.widthSizeOut
-    writeback.io.memWriteIn := pipeline4.io.memWriteOut
     writeback.io.memReadIn := pipeline4.io.memReadOut
     writeback.io.wbFlagIn := pipeline4.io.wbFlagOut
-    writeback.io.wbALUOrMemIn := pipeline4.io.wbALUOrMemOut
 
     writeback.io.ALUIn := pipeline4.io.ALUOut
     writeback.io.rdAddr := pipeline4.io.rdaddrOut

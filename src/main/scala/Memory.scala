@@ -10,11 +10,11 @@ class Memory extends Module {
         val rdaddrIn = Input(UInt(5.W))
         val rs2DataIn = Input(UInt(32.W))
 
+        // Control inputs
         val widthSizeIn = Input(UInt(2.W))
         val memWriteIn = Input(Bool())
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
-        val wbALUOrMemIn = Input(Bool())
 
         // Outputs
         val ALUOut = Output(UInt(32.W))
@@ -26,14 +26,12 @@ class Memory extends Module {
     io.ALUOut := io.ALUIn
     io.rdaddrOut := io.rdaddrIn
 
-    // Calculate word address
+    // Calculate word address in datamemory
     val wordAddr = io.ALUIn(11, 2) // divide by 4 for word index
     val byteOffset = io.ALUIn(1, 0)
 
     // Making datamemory as register
-    val mem = RegInit(
-        VecInit(Seq.fill(64)(0.U(32.W)))
-    ) // Change to 1024 when done
+    val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W)))) // Change to 1024 when done
 
     // -----------------------------------------(   New-word generation   )--------------------------------------------------
     // Read old word for partial writes
@@ -44,16 +42,11 @@ class Memory extends Module {
 
     when(io.memWriteIn) {
         switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) {
-                newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3))
-            }
-            is("b01".U) {
-                newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3))
-            }
+            is("b00".U) { newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3)) }
+            is("b01".U) { newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3)) }
             is("b10".U) { newWord := io.rs2DataIn }
         }
         mem(wordAddr) := newWord
-
     }
     io.memOut := mem
 
@@ -63,6 +56,7 @@ class Memory extends Module {
     // We only do this when memRead in is high
     val loadData = Wire(UInt(32.W))
     loadData := 0.U
+    
     when(io.memReadIn) {
         switch(io.widthSizeIn) {
 
@@ -71,19 +65,16 @@ class Memory extends Module {
                 val byte = shifted(7, 0)
                 loadData := Cat(Fill(24, byte(7)), byte)
             }
-
             is("b01".U) { // halfword
                 val shifted = loadWord >> (byteOffset << 3)
                 val half = shifted(15, 0)
                 loadData := Cat(Fill(16, half(15)), half)
             }
-
             is("b10".U) { // word
                 loadData := loadWord
             }
         }
     }
-
     io.loadDataOut := loadData
 }
 

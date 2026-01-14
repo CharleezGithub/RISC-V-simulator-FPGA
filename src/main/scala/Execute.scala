@@ -46,8 +46,8 @@ class Execute extends Module {
                         is("b111".U) { io.ALUOut := io.rs1Data & io.rs2Data }                                       // AND
                         is("b110".U) { io.ALUOut := io.rs1Data | io.rs2Data }                                       // OR
                         is("b100".U) { io.ALUOut := io.rs1Data ^ io.rs2Data }                                       // XOR
-                        is("b001".U) { io.ALUOut := io.rs1Data << 1.U }                                      // SLL May be wrong
-                        is("b101".U) { io.ALUOut := io.rs1Data >> 1.U }                                      // SRL May be wrong
+                        is("b001".U) { io.ALUOut := io.rs1Data << 1.U }                                             // SLL May be wrong
+                        is("b101".U) { io.ALUOut := io.rs1Data >> 1.U }                                             // SRL May be wrong
                         is("b010".U) { io.ALUOut := (io.rs1Data.asSInt < io.rs2Data.asSInt).asUInt }                // SLT
                         is("b011".U) { /* SLTU */ }                                                                 // SLTU
                     }
