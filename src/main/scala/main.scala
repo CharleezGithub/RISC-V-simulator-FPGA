@@ -326,7 +326,6 @@ class RISCV extends Module {
 
     writeback.io.ALUIn := pipeline4.io.ALUOut
     writeback.io.rdAddr := pipeline4.io.rdaddrOut
-    writeback.io.memDataIn := pipeline4.io.memDataOut
     writeback.io.loadDataIn := pipeline4.io.loadDataOut
 
     // Connecting writeback - registerfile

@@ -15,7 +15,6 @@ class Writeback extends Module {
         val wbFlagIn = Input(Bool())
 
         val wbALUOrMemIn = Input(Bool()) // rfEnable logic
-        val memDataIn = Input(UInt(32.W))
 
         // To register file
         val rfWAddr = Output(UInt(5.W))

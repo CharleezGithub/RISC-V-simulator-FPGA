@@ -1,3 +1,5 @@
+package empty
+
 import chisel3._
 import chisel3.util._
 
@@ -226,13 +228,10 @@ class MEM_WB extends Module {
 
         val ALUIn = Input(UInt(32.W))
         val rdaddrIn = Input(UInt(5.W))
-        val memDataIn  = Input(UInt(32.W))
         val loadDataIn = Input(UInt(32.W))
 
-        
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(5.W))
-        val memDataOut = Output(UInt(32.W))
         val loadDataOut = Output(UInt(32.W))
 
         // Control signals output for reg
@@ -263,16 +262,13 @@ class MEM_WB extends Module {
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
     val wbALUorMemReg = RegInit(false.B)
-    val memDataReg = RegInit(0.U(32.W))
 
-    memDataReg := io.memDataIn
     widthsizeReg := io.widthSizeIn
     memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
     wbALUorMemReg := io.wbALUOrMemIn
 
-    io.memDataOut := memDataReg
     io.widthSizeOut := widthsizeReg
     io.memWriteOut := memWriteReg
     io.memReadOut := memReadReg

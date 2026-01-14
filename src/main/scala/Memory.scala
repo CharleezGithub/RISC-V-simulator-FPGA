@@ -1,6 +1,5 @@
 package empty
 
-
 import chisel3._
 import chisel3.util._
 
@@ -32,7 +31,9 @@ class Memory extends Module {
     val byteOffset = io.ALUIn(1, 0)
 
     // Making datamemory as register
-    val mem = RegInit(VecInit(Seq.fill(64)(0.U(32.W)))) // Change to 1024 when done
+    val mem = RegInit(
+        VecInit(Seq.fill(64)(0.U(32.W)))
+    ) // Change to 1024 when done
 
     // -----------------------------------------(   New-word generation   )--------------------------------------------------
     // Read old word for partial writes
@@ -43,8 +44,12 @@ class Memory extends Module {
 
     when(io.memWriteIn) {
         switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) { newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3)) }
-            is("b01".U) { newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3)) }
+            is("b00".U) {
+                newWord := (oldWord & ~(0xff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xff.U) << (byteOffset << 3))
+            }
+            is("b01".U) {
+                newWord := (oldWord & ~(0xffff.U << (byteOffset << 3))) | ((io.rs2DataIn & 0xffff.U) << (byteOffset << 3))
+            }
             is("b10".U) { newWord := io.rs2DataIn }
         }
         mem(wordAddr) := newWord
@@ -55,28 +60,31 @@ class Memory extends Module {
     // ------------------------------------------(   Load-word fetching   )---------------------------------------------------
     // Read old word for partial writes
     val loadWord = mem(wordAddr)
-    // We only do this when memRead in is high 
+    // We only do this when memRead in is high
     val loadData = Wire(UInt(32.W))
     loadData := 0.U
     when(io.memReadIn) {
         switch(io.widthSizeIn) {
+
             is("b00".U) { // byte
-            val idx = (byteOffset << 3) +& 7.U
-            val byte = loadWord((idx - 7.U).asUInt, idx.asUInt)
-            loadData := Cat(Fill(24, byte(7)), byte)
+                val shifted = loadWord >> (byteOffset << 3)
+                val byte = shifted(7, 0)
+                loadData := Cat(Fill(24, byte(7)), byte)
             }
+
             is("b01".U) { // halfword
-            val idx = (byteOffset << 3) +& 15.U
-            val half = loadWord((idx - 15.U).asUInt, idx.asUInt)
-            loadData := Cat(Fill(16, half(15)), half)
+                val shifted = loadWord >> (byteOffset << 3)
+                val half = shifted(15, 0)
+                loadData := Cat(Fill(16, half(15)), half)
             }
+
             is("b10".U) { // word
-            loadData := loadWord
+                loadData := loadWord
             }
         }
-        io.loadDataOut := loadData
     }
 
+    io.loadDataOut := loadData
 }
 
 object Memory extends App {
