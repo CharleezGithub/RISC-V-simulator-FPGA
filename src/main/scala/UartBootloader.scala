@@ -1,3 +1,5 @@
+package empty
+
 import chisel3._
 import chisel3.util._
 class UartBootloader extends Module {
