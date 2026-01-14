@@ -58,15 +58,25 @@ class Memory extends Module {
     // We only do this when memRead in is high 
     val loadData = Wire(UInt(32.W))
     loadData := 0.U
-
     when(io.memReadIn) {
-        switch(io.widthSizeIn) { // byte, halfword, word
-            is("b00".U) { loadData := Cat(Fill(24, loadWord((byteOffset << 3) + 7)), loadWord((byteOffset << 3) + 7, (byteOffset << 3))) }
-            is("b01".U) { loadData := Cat(Fill(16, loadWord((byteOffset << 3) + 15)), loadWord((byteOffset << 3) + 15, (byteOffset << 3))) }
-            is("b10".U) { loadData := loadWord }
+        switch(io.widthSizeIn) {
+            is("b00".U) { // byte
+            val idx = (byteOffset << 3) +& 7.U
+            val byte = loadWord((idx - 7.U).asUInt, idx.asUInt)
+            loadData := Cat(Fill(24, byte(7)), byte)
+            }
+            is("b01".U) { // halfword
+            val idx = (byteOffset << 3) +& 15.U
+            val half = loadWord((idx - 15.U).asUInt, idx.asUInt)
+            loadData := Cat(Fill(16, half(15)), half)
+            }
+            is("b10".U) { // word
+            loadData := loadWord
+            }
         }
+        io.loadDataOut := loadData
     }
-    io.loadDataOut := loadData
+
 }
 
 object Memory extends App {

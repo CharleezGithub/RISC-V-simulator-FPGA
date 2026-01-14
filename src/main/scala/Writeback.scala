@@ -24,7 +24,7 @@ class Writeback extends Module {
 
     })
     // Data will be sent to certain address in register file when enable signal true
-    io.rfWAddr := io.rdAdrr
+    io.rfWAddr := io.rdAddr
     io.rfWData := Mux(io.memReadIn, io.loadDataIn, io.ALUIn)
     io.rfWEn := io.wbFlagIn
 }
