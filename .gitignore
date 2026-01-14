@@ -12,3 +12,5 @@ generated/
 .metals/
 .vscode/
 .bloop/
+test_run_dir/decode_should_be_able_to_split_a_instr_correctly/Decode.lo.fir
+/test_run_dir
