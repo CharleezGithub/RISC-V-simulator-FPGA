@@ -196,7 +196,8 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
         )
     )
 
-    val idx = RegInit(0.U(10.W))
+    val maxMsgLen = 64 * 22
+    val idx = RegInit(0.U(log2Ceil(maxMsgLen).W))
     val sending = RegInit(false.B)
     val latchedResponseType = RegInit(0.U(4.W))
 
