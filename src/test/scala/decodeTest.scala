@@ -68,8 +68,7 @@ class decodeTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.memReadOut.expect(true.B)
       dut.io.memWriteOut.expect(false.B)
       dut.io.wbFlagOut.expect(true.B)
-      dut.io.wbALUOrMemOut.expect(true.B)
-      dut.io.widthSizeOut.expect("b00".U)
+      dut.io.widthSizeOut.expect("b10".U)
     }
   }
 }

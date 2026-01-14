@@ -18,6 +18,8 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
         val listeningLED = Output(Bool())
         val runningLED = Output(Bool())
         val printRegLED = Output(Bool())
+
+        val regsOut = Output(Vec(32, UInt(32.W)))
     })
     val profilingPending = RegInit(false.B)
 
@@ -319,7 +321,6 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     pipeline4.io.rdaddrIn := memory.io.rdaddrOut
 
     // Connecting pipeline registers - Write-back
-    writeback.io.widthSizeIn := pipeline4.io.widthSizeOut
     writeback.io.memReadIn := pipeline4.io.memReadOut
     writeback.io.wbFlagIn := pipeline4.io.wbFlagOut
 
@@ -359,6 +360,8 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     uart.io.printOutRegs := printRegsLatch
     uart.io.profilingData := profilingLatched
     uart.io.dataMemory := printMemLatch
+
+    io.regsOut := decoder.io.regsOut
 }
 
 // generate Verilog
