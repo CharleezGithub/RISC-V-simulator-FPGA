@@ -105,10 +105,9 @@ class Execute extends Module {
         }
 
         // ---------------------------------------------(   B-type   )------------------------------------------------------
+        val taken = Wire(Bool())
+        taken := false.B
         is("b1100011".U) {
-            val taken = Wire(Bool())
-            taken := false.B
-
             switch(io.funct3) {
                 is("b000".U) { io.branchTaken := io.rs1Data === io.rs2Data }                                        // BEQ
                 is("b001".U) { io.branchTaken := io.rs1Data =/= io.rs2Data }                                        // BNE
