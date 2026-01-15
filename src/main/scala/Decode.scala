@@ -80,74 +80,37 @@ class Decode extends Module {
     )
 
     // ------------------------------------------------( Control Unit )-----------------------------------------------------
+    // Defaults
     io.memReadOut := false.B
     io.memWriteOut := false.B
     io.wbFlagOut := false.B
     io.widthSizeOut := "b00".U
+
     switch(opcode) {
         // load word sets
         is("b0000011".U) {
+            io.memReadOut := true.B
+            io.memWriteOut := false.B
+            io.wbFlagOut := true.B
+
             switch(funct3) {
-                // LB
-                is("b000".U) {
-                    io.memReadOut := true.B
-                    io.memWriteOut := false.B
-                    io.wbFlagOut := true.B
-                    io.widthSizeOut := "b00".U
-                }
-                // LH
-                is("b001".U) {
-                    io.memReadOut := true.B
-                    io.memWriteOut := false.B
-                    io.wbFlagOut := true.B
-                    io.widthSizeOut := "b01".U
-                }
-                // LW
-                is("b010".U) {
-                    io.memReadOut := true.B
-                    io.memWriteOut := false.B
-                    io.wbFlagOut := true.B
-                    io.widthSizeOut := "b10".U // WORD
-                }
-                // LBU
-                is("b100".U) {
-                    io.memReadOut := true.B
-                    io.memWriteOut := false.B
-                    io.wbFlagOut := true.B
-                    io.widthSizeOut := "b00".U
-                }
-                // LHU
-                is("b101".U) {
-                    io.memReadOut := true.B
-                    io.memWriteOut := false.B
-                    io.wbFlagOut := true.B
-                    io.widthSizeOut := "b01".U
-                }
+                is("b000".U) { io.widthSizeOut := "b00".U } // LH
+                is("b001".U) { io.widthSizeOut := "b01".U } // LW
+                is("b010".U) { io.widthSizeOut := "b10".U } // WORD
+                is("b100".U) { io.widthSizeOut := "b00".U } // LBU
+                is("b101".U) { io.widthSizeOut := "b01".U } // LHU
             }
         }
+
         is("b0100011".U) {
+            io.memReadOut := false.B
+            io.memWriteOut := true.B
+            io.wbFlagOut := false.B
+
             switch(funct3) {
-                // SB
-                is("b000".U) {
-                    io.memReadOut := false.B
-                    io.memWriteOut := true.B
-                    io.wbFlagOut := false.B
-                    io.widthSizeOut := "b00".U
-                }
-                // SH
-                is("b001".U) {
-                    io.memReadOut := false.B
-                    io.memWriteOut := true.B
-                    io.wbFlagOut := false.B
-                    io.widthSizeOut := "b01".U
-                }
-                // SW
-                is("b010".U) {
-                    io.memReadOut := false.B
-                    io.memWriteOut := true.B
-                    io.wbFlagOut := false.B
-                    io.widthSizeOut := "b10".U
-                }
+                is("b000".U) { io.widthSizeOut := "b00".U } // SB
+                is("b001".U) { io.widthSizeOut := "b01".U } // SH
+                is("b010".U) { io.widthSizeOut := "b10".U } // SW
             }
         }
         // Jumps, ALU-I, ALu-reg,

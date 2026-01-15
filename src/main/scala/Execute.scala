@@ -28,8 +28,11 @@ class Execute extends Module {
         val rs2DataOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
+
+        // Branch and flush outputs
         val branchTaken = Output(Bool())
         val branchTarget = Output(UInt(32.W))
+        val flush = Output(Bool())
     })
 
     // Passing on relevant values 
@@ -37,11 +40,6 @@ class Execute extends Module {
     io.rs2DataOut := io.rs2Data
     io.pcOut := io.pcIn
     io.ALUOut := 0.U // Init value
-
-    // Branching calculations
-    io.branchTaken := false.B
-    io.branchTarget := io.pcIn + io.immB
-    
 
     switch(io.opcode) {
         // ---------------------------------------------(   R-type   )------------------------------------------------------
@@ -108,6 +106,9 @@ class Execute extends Module {
 
         // ---------------------------------------------(   B-type   )------------------------------------------------------
         is("b1100011".U) {
+            val taken = Wire(Bool())
+            taken := false.B
+
             switch(io.funct3) {
                 is("b000".U) { io.branchTaken := io.rs1Data === io.rs2Data }                                        // BEQ
                 is("b001".U) { io.branchTaken := io.rs1Data =/= io.rs2Data }                                        // BNE
@@ -116,11 +117,11 @@ class Execute extends Module {
                 is("b110".U) { io.branchTaken := io.rs1Data < io.rs2Data }                                          // BLTU
                 is("b111".U) { io.branchTaken := io.rs1Data >= io.rs2Data }                                         // BGEU
             }
+            // Branching calculations
+            io.branchTaken := taken
+            io.branchTarget := io.pcIn + io.immB
+            io.flush := taken   // only flush if branch is actually taken
         }
-
-
-
-
     }
 }
 
