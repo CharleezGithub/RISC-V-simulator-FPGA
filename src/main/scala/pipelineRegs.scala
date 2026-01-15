@@ -10,6 +10,9 @@ class IF_ID extends Module {
 
         val pcOut = Output(UInt(32.W))
         val instr = Output(UInt(32.W))
+
+        //inputs for control hazard
+        val flushIn = Input(Bool())
     })
     // Registers
     val pcReg = RegInit(0.U(32.W))
@@ -17,8 +20,11 @@ class IF_ID extends Module {
 
     // Connecting inputs to registers
     pcReg := io.pcIn
-    instrReg := io.instrIn
-
+    when(!io.flushIn){
+     instrReg := io.instrIn
+    }.otherwise{
+        instrReg := 0.U
+    }    
     // Connecting outputs to registers
     io.pcOut := pcReg
     io.instr := instrReg
@@ -75,6 +81,9 @@ class ID_EX extends Module {
         val memReadOut = Output(Bool())
         val wbFlagOut = Output(Bool())
 
+        //control hazard
+        val flushIn = Input(Bool())
+
     })
     // Pipeline Registers
     val rdaddrReg = RegInit(0.U(5.W))
@@ -98,6 +107,8 @@ class ID_EX extends Module {
     val wbFlagReg = RegInit(false.B)
 
     // Connecting input to register
+
+    when(!io.flushIn){
     rdaddrReg := io.rdaddrIn
     rs1Reg := io.rs1In
     rs2Reg := io.rs2In
@@ -117,6 +128,20 @@ class ID_EX extends Module {
     memWriteReg := io.memWriteIn
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
+    } .otherwise{
+    rdaddrReg := 0.U
+    rs1Reg := 0.U
+    rs2Reg := 0.U
+    opcodeReg := 0.U
+    funct3Reg := 0.U
+    funct7Reg := 0.U
+
+    immIReg := 0.U
+    immSReg := 0.U
+    immBReg := 0.U
+    immUReg := 0.U
+    immJReg := 0.U
+    }
 
     // Connecting output to register
     io.rdaddrOut := rdaddrReg

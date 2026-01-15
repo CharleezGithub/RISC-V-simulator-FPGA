@@ -120,6 +120,9 @@ class Execute extends Module {
             // Branching calculations
             io.branchTaken := taken
             io.branchTarget := io.pcIn + io.immB
+            when(io.pcIn === io.pcIn + io.immB){
+                taken := false.B
+            }
             io.flush := taken   // only flush if branch is actually taken
         }
     }
