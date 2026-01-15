@@ -219,10 +219,18 @@ class MEM_WB extends Module {
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
 
+        // Branch signals
+        val branchTakenIn = Input(Bool())
+        val branchTargetIn = Input(UInt(32.W))
+
         // Outputs
         val ALUOut = Output(UInt(32.W))
         val rdaddrOut = Output(UInt(5.W))
         val loadDataOut = Output(UInt(32.W))
+
+        // Branch signals
+        val branchTakenOut = Input(Bool())
+        val branchTargetOut = Input(UInt(32.W))
 
         // Control signals
         val widthSizeOut = Output(UInt(2.W))
@@ -237,6 +245,9 @@ class MEM_WB extends Module {
     val widthsizeReg = RegInit(0.U(2.W))
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
+
+    val branchTakenReg = RegInit(false.B)
+    val branchTargetReg = RegInit(0.U(32.W))
     
 
     // Connecting input to registers
@@ -248,6 +259,9 @@ class MEM_WB extends Module {
     memReadReg := io.memReadIn
     wbFlagReg := io.wbFlagIn
 
+    branchTakenReg := io.branchTakenIn
+    branchTargetReg := io.branchtargetIn
+
     // Connecting output to registers
     io.ALUOut := ALUReg
     io.rdaddrOut := rdaddrReg
@@ -256,6 +270,9 @@ class MEM_WB extends Module {
     io.widthSizeOut := widthsizeReg
     io.memReadOut := memReadReg
     io.wbFlagOut := wbFlagReg
+
+    io.branchTakenOut := branchTakenReg
+    io.branchTargetOut := branchTargetReg
 }
 object MEM_WB extends App {
     emitVerilog(new MEM_WB())

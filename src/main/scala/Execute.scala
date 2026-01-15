@@ -28,6 +28,8 @@ class Execute extends Module {
         val rs2DataOut = Output(UInt(32.W))
         val ALUOut = Output(UInt(32.W))
         val pcOut = Output(UInt(32.W))
+        val branchTaken = Output(Bool())
+        val branchTarget = Output(UInt(32.W))
     })
 
     // Passing on relevant values 
@@ -35,6 +37,11 @@ class Execute extends Module {
     io.rs2DataOut := io.rs2Data
     io.pcOut := io.pcIn
     io.ALUOut := 0.U // Init value
+
+    // Branching calculations
+    io.branchTaken := false.B
+    io.branchTarget := io.pcIn + io.immB
+    
 
     switch(io.opcode) {
         // ---------------------------------------------(   R-type   )------------------------------------------------------
@@ -98,6 +105,21 @@ class Execute extends Module {
                 is("b010".U) { io.ALUOut := io.rs1Data + io.immI }                                                  // LW
             }
         }
+
+        // ---------------------------------------------(   B-type   )------------------------------------------------------
+        is("b1100011".U) {
+            switch(io.funct3) {
+                is("b000".U) { io.branchTaken := io.rs1Data === io.rs2Data }                                        // BEQ
+                is("b001".U) { io.branchTaken := io.rs1Data =/= io.rs2Data }                                        // BNE
+                is("b100".U) { io.branchTaken := io.rs1Data.asSInt < io.rs2Data.asSInt }                            // BLT
+                is("b101".U) { io.branchTaken := io.rs1Data.asSInt >= io.rs2Data.asSInt }                           // BGE
+                is("b110".U) { io.branchTaken := io.rs1Data < io.rs2Data }                                          // BLTU
+                is("b111".U) { io.branchTaken := io.rs1Data >= io.rs2Data }                                         // BGEU
+            }
+        }
+
+
+
 
     }
 }

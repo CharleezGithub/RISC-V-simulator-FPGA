@@ -334,6 +334,14 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     val allowWriteback = runEnable
     decoder.io.writeFlag := writeback.io.rfWEn && allowWriteback
 
+    // Branch type singals from execute - pipeline4 - fetch
+    pipeline4.io.branchTakenIn := execute.io.branchTaken
+    pipeline4.io.branchTakenIn := execute.io.branchTarget
+
+    fetch.io.branchTaken := pipeline4.io.branchTakenOut
+    fetch.io.branchTarget := pipeline4.io.branchTargetOut
+
+
     latchingALU := Mux(
         execute.io.ALUOut === 0.U,
         latchingALU,
@@ -362,6 +370,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     uart.io.dataMemory := printMemLatch
 
     io.regsOut := decoder.io.regsOut
+
 }
 
 // generate Verilog

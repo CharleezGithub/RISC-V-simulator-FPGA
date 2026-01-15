@@ -11,6 +11,9 @@ class Fetch extends Module {
         val pcOut = Output(UInt(32.W)) // current PC to send to ID
         val instr = Output(UInt(32.W)) // fetched instruction
 
+        val branchTaken = Input(Bool())
+        val branchTarget = Input(UInt(32.W))
+
         val ecallOut = Output(Bool())
     })
 
@@ -23,7 +26,7 @@ class Fetch extends Module {
     val pcReg = RegInit(0.U(32.W))
 
     // Default next PC = PC + 4 (sequential)
-    val pcNext = Mux(branchEn, branchAddr, pcReg + 4.U)
+    val pcNext = Mux(io.branchTaken, branchTarget, pcReg + 4.U)
 
     // check if its ecall to break the code
     val ecall = io.instr === "h00000073".U  
