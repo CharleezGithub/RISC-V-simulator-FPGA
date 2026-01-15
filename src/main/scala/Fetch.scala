@@ -10,6 +10,8 @@ class Fetch extends Module {
         val resetPC = Input(Bool())
         val pcOut = Output(UInt(32.W)) // current PC to send to ID
         val instr = Output(UInt(32.W)) // fetched instruction
+
+        val ecallOut = Output(Bool())
     })
 
     // Control inputs from later stages (dummy values for now)
@@ -23,10 +25,13 @@ class Fetch extends Module {
     // Default next PC = PC + 4 (sequential)
     val pcNext = Mux(branchEn, branchAddr, pcReg + 4.U)
 
+    // check if its ecall to break the code
+    val ecall = io.instr === "h00000073".U  
+
     when(io.resetPC) {
         pcReg := 0.U
     }
-    .elsewhen(io.enable) {
+    .elsewhen(io.enable && !ecall) {
         pcReg := Mux(flush, 0.U, pcNext) // here we let current PC increment unless flush is true
     }
 
@@ -36,6 +41,8 @@ class Fetch extends Module {
     // Instruction fetch
     val instrIndex = pcReg >> 2
     io.instr := io.program(instrIndex)
+
+    io.ecallOut := ecall
 }
 
 object Fetch extends App {
