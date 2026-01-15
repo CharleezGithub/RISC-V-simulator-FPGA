@@ -20,11 +20,12 @@ class IF_ID extends Module {
 
     // Connecting inputs to registers
     pcReg := io.pcIn
-    when(!io.flushIn){
-     instrReg := io.instrIn
-    }.otherwise{
-        instrReg := 0.U
-    }    
+     when(io.flushIn) {
+        instrReg := "h00000013".U   // NOP = addi x0, x0, 0
+    }.otherwise {
+        instrReg := io.instrIn
+    }
+
     // Connecting outputs to registers
     io.pcOut := pcReg
     io.instr := instrReg
@@ -141,6 +142,10 @@ class ID_EX extends Module {
     immBReg := 0.U
     immUReg := 0.U
     immJReg := 0.U
+    widthsizeReg := 0.U
+    memWriteReg  := false.B
+    memReadReg   := false.B
+    wbFlagReg    := false.B
     }
 
     // Connecting output to register

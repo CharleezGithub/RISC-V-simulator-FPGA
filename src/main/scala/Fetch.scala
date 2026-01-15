@@ -26,7 +26,7 @@ class Fetch extends Module {
     val pcReg = RegInit(0.U(32.W))
 
     // Default next PC = PC + 4 (sequential)
-    val pcNext = Mux(io.branchTaken, branchTarget, pcReg + 4.U)
+    val pcNext = Mux(io.branchTaken, io.branchTarget, pcReg + 4.U)
 
     // check if its ecall to break the code
     val ecall = io.instr === "h00000073".U  
@@ -35,7 +35,7 @@ class Fetch extends Module {
         pcReg := 0.U
     }
     .elsewhen(io.enable && !ecall) {
-        pcReg := Mux(flush, 0.U, pcNext) // here we let current PC increment unless flush is true
+        pcReg := pcNext // here we let current PC increment unless flush is true
     }
 
     // Output current PC

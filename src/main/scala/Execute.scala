@@ -40,6 +40,9 @@ class Execute extends Module {
     io.rs2DataOut := io.rs2Data
     io.pcOut := io.pcIn
     io.ALUOut := 0.U // Init value
+    io.branchTaken  := false.B
+    io.branchTarget := 0.U
+    io.flush        := false.B
 
     switch(io.opcode) {
         // ---------------------------------------------(   R-type   )------------------------------------------------------
@@ -105,24 +108,21 @@ class Execute extends Module {
         }
 
         // ---------------------------------------------(   B-type   )------------------------------------------------------
-        val taken = Wire(Bool())
-        taken := false.B
         is("b1100011".U) {
-            switch(io.funct3) {
-                is("b000".U) { io.branchTaken := io.rs1Data === io.rs2Data }                                        // BEQ
-                is("b001".U) { io.branchTaken := io.rs1Data =/= io.rs2Data }                                        // BNE
-                is("b100".U) { io.branchTaken := io.rs1Data.asSInt < io.rs2Data.asSInt }                            // BLT
-                is("b101".U) { io.branchTaken := io.rs1Data.asSInt >= io.rs2Data.asSInt }                           // BGE
-                is("b110".U) { io.branchTaken := io.rs1Data < io.rs2Data }                                          // BLTU
-                is("b111".U) { io.branchTaken := io.rs1Data >= io.rs2Data }                                         // BGEU
-            }
-            // Branching calculations
-            io.branchTaken := taken
-            io.branchTarget := io.pcIn + io.immB
-            when(io.pcIn === io.pcIn + io.immB){
-                taken := false.B
-            }
-            io.flush := taken   // only flush if branch is actually taken
+        val taken = WireDefault(false.B)
+
+        switch(io.funct3) {
+            is("b000".U) { taken := io.rs1Data === io.rs2Data }                         // BEQ
+            is("b001".U) { taken := io.rs1Data =/= io.rs2Data }                         // BNE
+            is("b100".U) { taken := io.rs1Data.asSInt <  io.rs2Data.asSInt }            // BLT
+            is("b101".U) { taken := io.rs1Data.asSInt >= io.rs2Data.asSInt }            // BGE
+            is("b110".U) { taken := io.rs1Data < io.rs2Data }                           // BLTU
+            is("b111".U) { taken := io.rs1Data >= io.rs2Data }                          // BGEU
+        }
+
+        io.branchTaken  := taken
+        io.branchTarget := io.pcIn + io.immB
+        io.flush        := taken
         }
     }
 }
