@@ -259,8 +259,8 @@ class MEM_WB extends Module {
         val loadDataOut = Output(UInt(32.W))
 
         // Branch signals
-        val branchTakenOut = Input(Bool())
-        val branchTargetOut = Input(UInt(32.W))
+        val branchTakenOut = Output(Bool())
+        val branchTargetOut = Output(UInt(32.W))
 
         // Control signals
         val widthSizeOut = Output(UInt(2.W))
@@ -290,7 +290,7 @@ class MEM_WB extends Module {
     wbFlagReg := io.wbFlagIn
 
     branchTakenReg := io.branchTakenIn
-    branchTargetReg := io.branchtargetIn
+    branchTargetReg := io.branchTargetIn
 
     // Connecting output to registers
     io.ALUOut := ALUReg
