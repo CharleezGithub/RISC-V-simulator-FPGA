@@ -120,10 +120,16 @@ class Execute extends Module {
             is("b111".U) { taken := io.rs1Data >= io.rs2Data }                          // BGEU
         }
 
+        // When branch is taken, we need to flush the instructions that were fetched
+        // after the branch instruction (in IF/ID and ID/EX stages)
         io.branchTaken  := taken
         io.branchTarget := io.pcIn + io.immB
         io.flush        := taken
         }
+
+        // For unconditional jumps, also set flush
+        // JAL and JALR would go here if implemented
+
     }
 }
 

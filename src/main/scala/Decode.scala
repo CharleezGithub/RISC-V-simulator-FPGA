@@ -49,10 +49,10 @@ class Decode extends Module {
 
     // immidate value generation
     val immI = Cat(Fill(20, instr(31)), instr(31, 20)) // I-type: sign-extended instr[31:20]
-    val immS = Cat(instr(31, 25), instr(11, 7))
-    val immB = Cat(funct7(6), rdAddr(0), funct7(5, 0), rdAddr(4, 1), 0.U) // B-type: branch immediate
-    val immU = Cat(funct7, rs2, rs1, funct3, 0.U(12.W)) // U-type: upper immediate
-    val immJ = Cat(funct7(6), rs1, funct3, rs2(0), funct7(5, 0), rs2(4, 1), 0.U) // J-type: jump immediate
+    val immS = Cat(Fill(20, instr(31)), instr(31, 25), instr(11, 7)) // S-type: sign-extended
+    val immB = Cat(Fill(19, instr(31)), instr(31), instr(7), instr(30, 25), instr(11, 8), 0.U(1.W)) // B-type: sign-extended branch immediate
+    val immU = Cat(instr(31, 12), 0.U(12.W)) // U-type: upper immediate
+    val immJ = Cat(Fill(11, instr(31)), instr(31), instr(19, 12), instr(20), instr(30, 21), 0.U(1.W)) // J-type: sign-extended jump immediate
 
     // --------------------------------------------( Register file logic )--------------------------------------------------
 

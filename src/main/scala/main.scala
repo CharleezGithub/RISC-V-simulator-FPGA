@@ -237,9 +237,13 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     val runEnable = (state === running) || (drainCounter =/= 0.U)
 
-    // control hazard
-    pipeline1.io.flushIn := execute.io.flush // IF/ID gets NOP
-    pipeline2.io.flushIn := execute.io.flush // ID/EX becomes bubble
+    // control hazard - extend flush for one more cycle to ensure proper flushing
+    val flushReg = RegInit(false.B)
+    flushReg := execute.io.flush
+    val flushExtended = execute.io.flush || flushReg
+
+    pipeline1.io.flushIn := flushExtended // IF/ID gets NOP
+    pipeline2.io.flushIn := flushExtended // ID/EX becomes bubble
 
     // Connecting Fetch - pipeline registers
     fetch.io.program := instructionMemory
@@ -279,6 +283,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     // Connecting pipeline registers - Execute
     // control signals
+    pipeline3.io.flushIn := flushExtended
     pipeline3.io.widthSizeIn := pipeline2.io.widthSizeOut
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
     pipeline3.io.memReadIn := pipeline2.io.memReadOut

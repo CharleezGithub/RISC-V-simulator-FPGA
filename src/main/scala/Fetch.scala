@@ -26,16 +26,21 @@ class Fetch extends Module {
     val pcReg = RegInit(0.U(32.W))
 
     // Default next PC = PC + 4 (sequential)
+    // When branch is taken, we need to account for the fact that:
+    // - The branch instruction is at PC (already executed in EX)
+    // - PC has already advanced to PC+4 (in IF, being flushed)
+    // - ID stage has PC+8 (being flushed)
+    // So branch target is relative to the branch instruction's PC
     val pcNext = Mux(io.branchTaken, io.branchTarget, pcReg + 4.U)
 
     // check if its ecall to break the code
-    val ecall = io.instr === "h00000073".U  
+    val ecall = io.instr === "h00000073".U
 
     when(io.resetPC) {
         pcReg := 0.U
     }
     .elsewhen(io.enable && !ecall) {
-        pcReg := pcNext // here we let current PC increment unless flush is true
+        pcReg := pcNext
     }
 
     // Output current PC

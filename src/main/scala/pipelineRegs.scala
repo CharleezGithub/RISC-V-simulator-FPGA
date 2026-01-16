@@ -11,7 +11,7 @@ class IF_ID extends Module {
         val pcOut = Output(UInt(32.W))
         val instr = Output(UInt(32.W))
 
-        //inputs for control hazard
+        // inputs for control hazard
         val flushIn = Input(Bool())
     })
     // Registers
@@ -20,8 +20,8 @@ class IF_ID extends Module {
 
     // Connecting inputs to registers
     pcReg := io.pcIn
-     when(io.flushIn) {
-        instrReg := "h00000013".U   // NOP = addi x0, x0, 0
+    when(io.flushIn) {
+        instrReg := "h00000013".U // NOP = addi x0, x0, 0
     }.otherwise {
         instrReg := io.instrIn
     }
@@ -82,7 +82,7 @@ class ID_EX extends Module {
         val memReadOut = Output(Bool())
         val wbFlagOut = Output(Bool())
 
-        //control hazard
+        // control hazard
         val flushIn = Input(Bool())
 
     })
@@ -109,43 +109,43 @@ class ID_EX extends Module {
 
     // Connecting input to register
 
-    when(!io.flushIn){
-    rdaddrReg := io.rdaddrIn
-    rs1Reg := io.rs1In
-    rs2Reg := io.rs2In
-    pcInReg := io.pcIn
+    when(!io.flushIn) {
+        rdaddrReg := io.rdaddrIn
+        rs1Reg := io.rs1In
+        rs2Reg := io.rs2In
+        pcInReg := io.pcIn
 
-    opcodeReg := io.opcodeIn
-    funct3Reg := io.funct3In
-    funct7Reg := io.funct7In
+        opcodeReg := io.opcodeIn
+        funct3Reg := io.funct3In
+        funct7Reg := io.funct7In
 
-    immIReg := io.immIIn
-    immSReg := io.immSIn
-    immBReg := io.immBIn
-    immUReg := io.immUIn
-    immJReg := io.immJIn
+        immIReg := io.immIIn
+        immSReg := io.immSIn
+        immBReg := io.immBIn
+        immUReg := io.immUIn
+        immJReg := io.immJIn
 
-    widthsizeReg := io.widthSizeIn
-    memWriteReg := io.memWriteIn
-    memReadReg := io.memReadIn
-    wbFlagReg := io.wbFlagIn
-    } .otherwise{
-    rdaddrReg := 0.U
-    rs1Reg := 0.U
-    rs2Reg := 0.U
-    opcodeReg := 0.U
-    funct3Reg := 0.U
-    funct7Reg := 0.U
+        widthsizeReg := io.widthSizeIn
+        memWriteReg := io.memWriteIn
+        memReadReg := io.memReadIn
+        wbFlagReg := io.wbFlagIn
+    }.otherwise {
+        rdaddrReg := 0.U
+        rs1Reg := 0.U
+        rs2Reg := 0.U
+        opcodeReg := 0.U
+        funct3Reg := 0.U
+        funct7Reg := 0.U
 
-    immIReg := 0.U
-    immSReg := 0.U
-    immBReg := 0.U
-    immUReg := 0.U
-    immJReg := 0.U
-    widthsizeReg := 0.U
-    memWriteReg  := false.B
-    memReadReg   := false.B
-    wbFlagReg    := false.B
+        immIReg := 0.U
+        immSReg := 0.U
+        immBReg := 0.U
+        immUReg := 0.U
+        immJReg := 0.U
+        widthsizeReg := 0.U
+        memWriteReg := false.B
+        memReadReg := false.B
+        wbFlagReg := false.B
     }
 
     // Connecting output to register
@@ -188,6 +188,9 @@ class EX_MEM extends Module {
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
 
+        // Flush input for control hazard
+        val flushIn = Input(Bool())
+
         // Outputs
         val rdaddrOut = Output(UInt(5.W))
         val rs2DataOut = Output(UInt(32.W))
@@ -200,27 +203,40 @@ class EX_MEM extends Module {
         val memReadOut = Output(Bool())
         val wbFlagOut = Output(Bool())
     })
+
     // Registers
     val rdaddrReg = RegInit(0.U(5.W))
     val rs2DataReg = RegInit(0.U(32.W))
     val ALUReg = RegInit(0.U(32.W))
     val pcReg = RegInit(0.U(32.W))
-    
+
     val widthsizeReg = RegInit(0.U(2.W))
     val memWriteReg = RegInit(false.B)
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
 
-    // Connecting input to registers
-    rdaddrReg := io.rdaddrIn
-    rs2DataReg := io.rs2DataIn
-    pcReg := io.pcIn
-    ALUReg := io.ALUIn
-
-    widthsizeReg := io.widthSizeIn
-    memWriteReg := io.memWriteIn
-    memReadReg := io.memReadIn
-    wbFlagReg := io.wbFlagIn
+    // Connecting input to registers with flush support
+    when(io.flushIn) {
+        // Insert bubble: zero out all values and disable control signals
+        rdaddrReg := 0.U
+        rs2DataReg := 0.U
+        ALUReg := 0.U
+        pcReg := 0.U
+        widthsizeReg := 0.U
+        memWriteReg := false.B
+        memReadReg := false.B
+        wbFlagReg := false.B
+    }.otherwise {
+        // Normal operation: pass through values
+        rdaddrReg := io.rdaddrIn
+        rs2DataReg := io.rs2DataIn
+        ALUReg := io.ALUIn
+        pcReg := io.pcIn
+        widthsizeReg := io.widthSizeIn
+        memWriteReg := io.memWriteIn
+        memReadReg := io.memReadIn
+        wbFlagReg := io.wbFlagIn
+    }
 
     // Connecting output to registers
     io.rdaddrOut := rdaddrReg
@@ -233,6 +249,7 @@ class EX_MEM extends Module {
     io.memReadOut := memReadReg
     io.wbFlagOut := wbFlagReg
 }
+
 object EX_MEM extends App {
     emitVerilog(new EX_MEM())
 }
@@ -271,14 +288,13 @@ class MEM_WB extends Module {
     val ALUReg = RegInit(0.U(32.W))
     val rdaddrReg = RegInit(0.U(5.W))
     val loadDataReg = RegInit(0.U(32.W))
-  
+
     val widthsizeReg = RegInit(0.U(2.W))
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
 
     val branchTakenReg = RegInit(false.B)
     val branchTargetReg = RegInit(0.U(32.W))
-    
 
     // Connecting input to registers
     ALUReg := io.ALUIn
