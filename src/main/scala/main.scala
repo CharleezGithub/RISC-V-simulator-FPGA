@@ -19,7 +19,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
         val runningLED = Output(Bool())
         val printRegLED = Output(Bool())
 
-        val regsOut = Output(Vec(32, UInt(32.W)))
+        // val regsOut = Output(Vec(32, UInt(32.W)))
     })
     val profilingPending = RegInit(false.B)
 
@@ -237,12 +237,9 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     val runEnable = (state === running) || (drainCounter =/= 0.U)
 
-
-
-    //control hazard
-    pipeline1.io.flushIn := execute.io.flush   // IF/ID gets NOP
-    pipeline2.io.flushIn := execute.io.flush   // ID/EX becomes bubble
-
+    // control hazard
+    pipeline1.io.flushIn := execute.io.flush // IF/ID gets NOP
+    pipeline2.io.flushIn := execute.io.flush // ID/EX becomes bubble
 
     // Connecting Fetch - pipeline registers
     fetch.io.program := instructionMemory
@@ -326,10 +323,9 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     pipeline4.io.loadDataIn := memory.io.loadDataOut
     pipeline4.io.ALUIn := memory.io.ALUOut
     pipeline4.io.rdaddrIn := memory.io.rdaddrOut
-    
-    pipeline4.io.branchTakenIn  := execute.io.branchTaken
-    pipeline4.io.branchTargetIn := execute.io.branchTarget
 
+    pipeline4.io.branchTakenIn := execute.io.branchTaken
+    pipeline4.io.branchTargetIn := execute.io.branchTarget
 
     // Connecting pipeline registers - Write-back
     writeback.io.memReadIn := pipeline4.io.memReadOut
@@ -346,10 +342,8 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     decoder.io.writeFlag := writeback.io.rfWEn && allowWriteback
 
     // Branch type singals from execute - pipeline4 - fetch
-    fetch.io.branchTaken  := execute.io.branchTaken
+    fetch.io.branchTaken := execute.io.branchTaken
     fetch.io.branchTarget := execute.io.branchTarget
-
-
 
     latchingALU := Mux(
         execute.io.ALUOut === 0.U,
@@ -378,7 +372,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     uart.io.profilingData := profilingLatched
     uart.io.dataMemory := printMemLatch
 
-    io.regsOut := decoder.io.regsOut
+    // io.regsOut := decoder.io.regsOut
 
 }
 
