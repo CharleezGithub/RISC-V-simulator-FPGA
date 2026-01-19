@@ -283,7 +283,8 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     // Connecting pipeline registers - Execute
     // control signals
-    pipeline3.io.flushIn := flushExtended
+    // Note: EX/MEM is NOT flushed - the instruction executing (branch/jump) must
+    // complete its writeback. Only IF/ID and ID/EX are flushed on control hazards.
     pipeline3.io.widthSizeIn := pipeline2.io.widthSizeOut
     pipeline3.io.memWriteIn := pipeline2.io.memWriteOut
     pipeline3.io.memReadIn := pipeline2.io.memReadOut

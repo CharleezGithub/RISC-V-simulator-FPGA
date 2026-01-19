@@ -198,9 +198,6 @@ class EX_MEM extends Module {
         val memReadIn = Input(Bool())
         val wbFlagIn = Input(Bool())
 
-        // Flush input for control hazard
-        val flushIn = Input(Bool())
-
         // Outputs
         val rdaddrOut = Output(UInt(5.W))
         val rs2DataOut = Output(UInt(32.W))
@@ -225,28 +222,17 @@ class EX_MEM extends Module {
     val memReadReg = RegInit(false.B)
     val wbFlagReg = RegInit(false.B)
 
-    // Connecting input to registers with flush support
-    when(io.flushIn) {
-        // Insert bubble: zero out all values and disable control signals
-        rdaddrReg := 0.U
-        rs2DataReg := 0.U
-        ALUReg := 0.U
-        pcReg := 0.U
-        widthsizeReg := 0.U
-        memWriteReg := false.B
-        memReadReg := false.B
-        wbFlagReg := false.B
-    }.otherwise {
-        // Normal operation: pass through values
-        rdaddrReg := io.rdaddrIn
-        rs2DataReg := io.rs2DataIn
-        ALUReg := io.ALUIn
-        pcReg := io.pcIn
-        widthsizeReg := io.widthSizeIn
-        memWriteReg := io.memWriteIn
-        memReadReg := io.memReadIn
-        wbFlagReg := io.wbFlagIn
-    }
+    // Normal operation: pass through values
+    // No flush support - EX/MEM should never be flushed because the instruction
+    // in EX stage (branch/jump) needs to complete its writeback
+    rdaddrReg := io.rdaddrIn
+    rs2DataReg := io.rs2DataIn
+    ALUReg := io.ALUIn
+    pcReg := io.pcIn
+    widthsizeReg := io.widthSizeIn
+    memWriteReg := io.memWriteIn
+    memReadReg := io.memReadIn
+    wbFlagReg := io.wbFlagIn
 
     // Connecting output to registers
     io.rdaddrOut := rdaddrReg
