@@ -107,19 +107,19 @@ class Execute extends Module {
             switch(io.funct7) {
                 is("b0000000".U) {
                     switch(io.funct3) {
-                        is("b000".U) { io.ALUOut := rs1 + rs2 }                                       // ADD
-                        is("b111".U) { io.ALUOut := rs1 & rs2 }                                       // AND
-                        is("b110".U) { io.ALUOut := rs1 | rs2 }                                       // OR
-                        is("b100".U) { io.ALUOut := rs1 ^ rs2 }                                       // XOR
-                        is("b001".U) { io.ALUOut := rs1 << 1.U }                                             // SLL May be wrong
-                        is("b101".U) { io.ALUOut := rs1 >> 1.U }                                             // SRL May be wrong
-                        is("b010".U) { io.ALUOut := (rs1.asSInt < rs2.asSInt).asUInt }                // SLT
+                        is("b000".U) { io.ALUOut := rs1 + rs2 }                                                     // ADD
+                        is("b111".U) { io.ALUOut := rs1 & rs2 }                                                     // AND
+                        is("b110".U) { io.ALUOut := rs1 | rs2 }                                                     // OR
+                        is("b100".U) { io.ALUOut := rs1 ^ rs2 }                                                     // XOR
+                        is("b001".U) { io.ALUOut := rs1 << 1.U }                                                    // SLL 
+                        is("b101".U) { io.ALUOut := rs1 >> 1.U }                                                    // SRL
+                        is("b010".U) { io.ALUOut := (rs1.asSInt < rs2.asSInt).asUInt }                              // SLT
                         is("b011".U) { /* SLTU */ }                                                                 // SLTU
                     }
                 }
                 is("b0100000".U) {
                     switch(io.funct3) {
-                        is("b000".U) { io.ALUOut := rs1 - rs2 }                                       // SUB
+                        is("b000".U) { io.ALUOut := rs1 - rs2 }                                                     // SUB
                         is("b101".U) { /* SRA */ }                                                                  // SRA
                     }
                 }
@@ -129,10 +129,10 @@ class Execute extends Module {
         // ---------------------------------------------(   I-type   )------------------------------------------------------
         is("b0010011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUOut := rs1 + io.immI }                                                  // ADDI
-                is("b111".U) { io.ALUOut := rs1 & io.immI }                                                  // ANDI
-                is("b110".U) { io.ALUOut := rs1 | io.immI }                                                  // ORI
-                is("b100".U) { io.ALUOut := rs1 ^ io.immI }                                                  // XORI
+                is("b000".U) { io.ALUOut := rs1 + io.immI }                                                         // ADDI
+                is("b111".U) { io.ALUOut := rs1 & io.immI }                                                         // ANDI
+                is("b110".U) { io.ALUOut := rs1 | io.immI }                                                         // ORI
+                is("b100".U) { io.ALUOut := rs1 ^ io.immI }                                                         // XORI
                 is("b010".U) { /* SLTI */ }                                                                         // SLTI
                 is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
                 is("b001".U) { /* SLLI */ }                                                                         // SLLI
@@ -149,18 +149,18 @@ class Execute extends Module {
         // ---------------------------------------------(   S-type   )------------------------------------------------------
         is("b0100011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUOut := rs1 + io.immS }                                                  // SB
-                is("b001".U) { io.ALUOut := rs1 + io.immS }                                                  // SH
-                is("b010".U) { io.ALUOut := rs1 + io.immS }                                                  // SW
+                is("b000".U) { io.ALUOut := rs1 + io.immS }                                                         // SB
+                is("b001".U) { io.ALUOut := rs1 + io.immS }                                                         // SH
+                is("b010".U) { io.ALUOut := rs1 + io.immS }                                                         // SW
             }
         }
 
         // ---------------------------------------------(   Loads   )------------------------------------------------------
         is("b0000011".U) {
             switch(io.funct3) {
-                is("b000".U) { io.ALUOut := rs1 + io.immI }                                                  // LB
-                is("b001".U) { io.ALUOut := rs1 + io.immI }                                                  // LH
-                is("b010".U) { io.ALUOut := rs1 + io.immI }                                                  // LW
+                is("b000".U) { io.ALUOut := rs1 + io.immI }                                                         // LB
+                is("b001".U) { io.ALUOut := rs1 + io.immI }                                                         // LH
+                is("b010".U) { io.ALUOut := rs1 + io.immI }                                                         // LW
             }
         }
 
@@ -169,12 +169,12 @@ class Execute extends Module {
         val taken = WireDefault(false.B)
 
         switch(io.funct3) {
-            is("b000".U) { taken := rs1 === rs2 }                         // BEQ
-            is("b001".U) { taken := rs1 =/= rs2 }                         // BNE
-            is("b100".U) { taken := rs1.asSInt <  rs2.asSInt }            // BLT
-            is("b101".U) { taken := rs1.asSInt >= rs2.asSInt }            // BGE
-            is("b110".U) { taken := rs1 < rs2 }                           // BLTU
-            is("b111".U) { taken := rs1 >= rs2 }                          // BGEU
+            is("b000".U) { taken := rs1 === rs2 }                                                                   // BEQ
+            is("b001".U) { taken := rs1 =/= rs2 }                                                                   // BNE
+            is("b100".U) { taken := rs1.asSInt <  rs2.asSInt }                                                      // BLT
+            is("b101".U) { taken := rs1.asSInt >= rs2.asSInt }                                                      // BGE
+            is("b110".U) { taken := rs1 < rs2 }                                                                     // BLTU
+            is("b111".U) { taken := rs1 >= rs2 }                                                                    // BGEU
         }
 
         // When branch is taken, we need to flush the instructions that were fetched
@@ -183,9 +183,19 @@ class Execute extends Module {
         io.branchTarget := io.pcIn + io.immB
         io.flush        := taken
         }
-
         // For unconditional jumps, also set flush
         // JAL and JALR would go here if implemented
+
+        // ---------------------------------------------(   U-type   )------------------------------------------------------
+        is("b0110111".U) {
+            io.ALUOut := io.immU                                                                                    // LUI
+        }
+        is("b0010111".U) { 
+            io.ALUOut := io.pcIn + io.immU                                                                          // AUIPC
+        }
+
+        // ---------------------------------------------(   J-type   )------------------------------------------------------
+
 
     }
 }
