@@ -114,13 +114,13 @@ class Execute extends Module {
                         is("b001".U) { io.ALUOut := rs1 << 1.U }                                                    // SLL 
                         is("b101".U) { io.ALUOut := rs1 >> 1.U }                                                    // SRL
                         is("b010".U) { io.ALUOut := (rs1.asSInt < rs2.asSInt).asUInt }                              // SLT
-                        is("b011".U) { /* SLTU */ }                                                                 // SLTU
+                        is("b011".U) { io.ALUOut := (rs1 < rs2) }                                                   // SLTU
                     }
                 }
                 is("b0100000".U) {
                     switch(io.funct3) {
                         is("b000".U) { io.ALUOut := rs1 - rs2 }                                                     // SUB
-                        is("b101".U) { /* SRA */ }                                                                  // SRA
+                        is("b101".U) { io.ALUOut := (rs1.asSInt >> rs2(4,0)).asUInt }                               // SRA
                     }
                 }
             }
@@ -133,14 +133,14 @@ class Execute extends Module {
                 is("b111".U) { io.ALUOut := rs1 & io.immI }                                                         // ANDI
                 is("b110".U) { io.ALUOut := rs1 | io.immI }                                                         // ORI
                 is("b100".U) { io.ALUOut := rs1 ^ io.immI }                                                         // XORI
-                is("b010".U) { /* SLTI */ }                                                                         // SLTI
-                is("b011".U) { /* SLTIU */ }                                                                        // SLTIU
-                is("b001".U) { /* SLLI */ }                                                                         // SLLI
+                is("b010".U) { io.ALUOut := (rs1.asSInt < io.immI.asSInt).asUInt }                                  // SLTI
+                is("b011".U) { io.ALUOut := (rs1 < io.immI) }                                                       // SLTIU
+                is("b001".U) { io.ALUOut := rs1 << io.immI(4,0) }                                                   // SLLI
 
                 is("b101".U) {
                     switch(io.funct7) {
-                        is("b0000000".U) { /* SRLI */ }                                                             // SRLI
-                        is("b0100000".U) { /* SRAI */ }                                                             // SRAI
+                        is("b0000000".U) { io.ALUOut := rs1 >> io.immI(4,0) }                                       // SRLI
+                        is("b0100000".U) { io.ALUOut := (rs1.asSInt >> io.immI(4,0)).asUInt }                       // SRAI
                     }
                 }
             }
@@ -195,7 +195,19 @@ class Execute extends Module {
         }
 
         // ---------------------------------------------(   J-type   )------------------------------------------------------
+        is("b1101111".U) { 
+            io.ALUOut := io.pcIn + 4.U // return address -> rd                                                      // JAL
+            io.branchTaken  := true.B
+            io.branchTarget := io.pcIn + io.immJ // jump target
+            io.flush        := true.B
+        }
 
+        is("b1100111".U) { 
+            io.ALUOut := io.pcIn + 4.U // return address -> rd                                                      // JALR
+            io.branchTaken  := true.B
+            io.branchTarget := (rs1 + io.immI) & ~1.U
+            io.flush        := true.B
+        }
 
     }
 }
