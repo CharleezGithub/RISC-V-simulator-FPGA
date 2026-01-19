@@ -4,51 +4,46 @@ import chisel3._
 import chisel3.util._
 import chisel.lib.uart._
 
-/** For every received byte, transmit "Key Received!\r\n" */
+/** For every received byte, transmit a selected response */
 class Uart(frequ: Int, baud: Int = 115200) extends Module {
     val io = IO(new Bundle {
         val rx = Input(Bool())
         val sendResponse = Input(Bool())
-        val responseType = Input(
-            UInt(4.W)
-        ) // 0 for "Program Received", 1 for profiling, 2 for debug print out everything received, 3 for print out registers, 4 invalid
+        val responseType = Input(UInt(4.W))
 
         val busy = Output(Bool())
 
-        // Profiling
-        val profilingData = Input(
-            Vec(3, UInt(32.W))
-        ) // Clock Count, MemReadCount, MemWriteCount
-
+        val profilingData = Input(Vec(3, UInt(32.W)))
         val dataMemory = Input(Vec(64, UInt(32.W)))
+        val printOutRegs = Input(Vec(32, UInt(32.W)))
 
-        val printOutRegs = Input(Vec(32, UInt(32.W))) // Only 1 register for now
         val captureEnable = Input(Bool())
         val clearBuffer = Input(Bool())
+
         val rxReadValue = Output(UInt(8.W))
         val rxValid = Output(Bool())
         val tx = Output(Bool())
     })
 
-    val MAX_LEN = 64
-
+    // ------------------------------------------------------------
+    // UART
+    // ------------------------------------------------------------
     val rxm = Module(new Rx(frequ, baud))
     val txm = Module(new BufferedTx(frequ, baud))
 
-    val rxStored = RegInit(VecInit(Seq.fill(32)(0.U(8.W))))
-    val rxCount = RegInit(0.U(6.W)) // up to 32 bytes
-
-    io.rxValid := RegNext(rxm.io.channel.valid, false.B)
-
     rxm.io.rxd := io.rx.asUInt
     io.tx := txm.io.txd.asBool
-
     io.rxReadValue := rxm.io.channel.bits
+    io.rxValid := RegNext(rxm.io.channel.valid, false.B)
 
-    // Add read values to this Register array to be printed out later
+    // ------------------------------------------------------------
+    // RX capture buffer
+    // ------------------------------------------------------------
+    val rxStored = RegInit(VecInit(Seq.fill(32)(0.U(8.W))))
+    val rxCount = RegInit(0.U(6.W))
+
     val rxFire = rxm.io.channel.valid && rxm.io.channel.ready
 
-    // Reset buffer when ready-to-read phase begins
     when(io.clearBuffer) {
         rxCount := 0.U
     }
@@ -58,12 +53,20 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
         rxCount := rxCount + 1.U
     }
 
-    // Queue incoming bytes so we don't drop them while doing other stuff
+    // RX queue so we never stall RX
     val inQ = Module(new Queue(UInt(8.W), entries = 32))
-
     inQ.io.enq.valid := rxm.io.channel.valid && io.captureEnable
     inQ.io.enq.bits := rxm.io.channel.bits
     rxm.io.channel.ready := Mux(io.captureEnable, inQ.io.enq.ready, true.B)
+    inQ.io.deq.ready := false.B
+
+    // ------------------------------------------------------------
+    // Constants & helpers
+    // ------------------------------------------------------------
+    val MAX_LEN = 64
+    val REG_LINE_LEN = 11
+    val MEM_LINE_LEN = 23
+    val MEM_ENTRIES = 64
 
     def strToVecPadded(s: String): Vec[UInt] =
         VecInit(s.padTo(MAX_LEN, ' ').map(_.toInt.U(8.W)))
@@ -71,16 +74,14 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     val rxStoredPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
     rxStoredPadded := VecInit(rxStored ++ Seq.fill(MAX_LEN - 32)(0.U))
 
-    // Convert a 4-bit nibble to ASCII hex character
-    def nibbleToAscii(nibble: UInt): UInt = {
-        Mux(
-            nibble < 10.U,
-            nibble + 0x30.U,
-            nibble - 10.U + 0x41.U
-        ) // '0'-'9' or 'A'-'F'
-    }
+    // Fast hex LUT (no compares/adds)
+    val hexLut = VecInit("0123456789ABCDEF".map(_.toInt.U(8.W)))
+    def nibbleToAscii(n: UInt): UInt = hexLut(n)
 
-    def u32ToHexLine(x: UInt): Vec[UInt] = {
+    // ------------------------------------------------------------
+    // Profiling strings (3 × 11 bytes)
+    // ------------------------------------------------------------
+    def u32Line(x: UInt): Vec[UInt] =
         VecInit(
             Seq(
                 '0'.U,
@@ -96,160 +97,194 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
                 '\n'.U
             )
         )
-    }
 
-    // 32 regs × "0xXXXXXXXX\n" (11 bytes each) = 352 bytes
-    def regPrintByte(i: UInt): UInt = {
-        val regIdx = (i / 11.U)(4, 0) // 0..31
-        val off = (i % 11.U)(3, 0) // 0..10
+    val printOutProfilingPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
+    printOutProfilingPadded :=
+        VecInit(
+            u32Line(io.profilingData(0)) ++
+                u32Line(io.profilingData(1)) ++
+                u32Line(io.profilingData(2)) ++
+                Seq.fill(MAX_LEN - 33)(0.U)
+        )
+
+    // ------------------------------------------------------------
+    // Register & memory print helpers (NO divide/modulo)
+    // ------------------------------------------------------------
+    def regPrintByte(regIdx: UInt, off: UInt): UInt = {
         val v = io.printOutRegs(regIdx)
+        val h = Wire(Vec(8, UInt(8.W)))
+        for (i <- 0 until 8) {
+            h(i) := nibbleToAscii(v(31 - 4 * i, 28 - 4 * i))
+        }
+
         MuxLookup(
             off,
             0.U,
             Array(
                 0.U -> '0'.U,
                 1.U -> 'x'.U,
-                2.U -> nibbleToAscii(v(31, 28)),
-                3.U -> nibbleToAscii(v(27, 24)),
-                4.U -> nibbleToAscii(v(23, 20)),
-                5.U -> nibbleToAscii(v(19, 16)),
-                6.U -> nibbleToAscii(v(15, 12)),
-                7.U -> nibbleToAscii(v(11, 8)),
-                8.U -> nibbleToAscii(v(7, 4)),
-                9.U -> nibbleToAscii(v(3, 0)),
+                2.U -> h(0),
+                3.U -> h(1),
+                4.U -> h(2),
+                5.U -> h(3),
+                6.U -> h(4),
+                7.U -> h(5),
+                8.U -> h(6),
+                9.U -> h(7),
                 10.U -> '\n'.U
             )
         )
     }
 
-    // Print non-zero data memory as "0xADDR: 0xDATA\n"
-    def memPrintByte(i: UInt): UInt = {
-        val entryIdx = (i / 22.U)(5, 0)
-        val off = (i % 22.U)(4, 0)
-
+    def memPrintByte(entryIdx: UInt, off: UInt): UInt = {
         val addr = (entryIdx << 2).asUInt.pad(32)
         val data = io.dataMemory(entryIdx)
 
-        Mux(
-            data === 0.U,
+        val ah = Wire(Vec(8, UInt(8.W)))
+        val dh = Wire(Vec(8, UInt(8.W)))
+        for (i <- 0 until 8) {
+            ah(i) := nibbleToAscii(addr(31 - 4 * i, 28 - 4 * i))
+            dh(i) := nibbleToAscii(data(31 - 4 * i, 28 - 4 * i))
+        }
+
+        val b = MuxLookup(
+            off,
             0.U,
-            MuxLookup(
-                off,
-                0.U,
-                Array(
-                    0.U -> '0'.U,
-                    1.U -> 'x'.U,
-                    2.U -> nibbleToAscii(addr(31, 28)),
-                    3.U -> nibbleToAscii(addr(27, 24)),
-                    4.U -> nibbleToAscii(addr(23, 20)),
-                    5.U -> nibbleToAscii(addr(19, 16)),
-                    6.U -> nibbleToAscii(addr(15, 12)),
-                    7.U -> nibbleToAscii(addr(11, 8)),
-                    8.U -> nibbleToAscii(addr(7, 4)),
-                    9.U -> nibbleToAscii(addr(3, 0)),
-                    10.U -> ':'.U,
-                    11.U -> ' '.U,
-                    12.U -> '0'.U,
-                    13.U -> 'x'.U,
-                    14.U -> nibbleToAscii(data(31, 28)),
-                    15.U -> nibbleToAscii(data(27, 24)),
-                    16.U -> nibbleToAscii(data(23, 20)),
-                    17.U -> nibbleToAscii(data(19, 16)),
-                    18.U -> nibbleToAscii(data(15, 12)),
-                    19.U -> nibbleToAscii(data(11, 8)),
-                    20.U -> nibbleToAscii(data(7, 4)),
-                    21.U -> nibbleToAscii(data(3, 0)),
-                    22.U -> '\n'.U
-                )
+            Array(
+                0.U -> '0'.U,
+                1.U -> 'x'.U,
+                2.U -> ah(0),
+                3.U -> ah(1),
+                4.U -> ah(2),
+                5.U -> ah(3),
+                6.U -> ah(4),
+                7.U -> ah(5),
+                8.U -> ah(6),
+                9.U -> ah(7),
+                10.U -> ':'.U,
+                11.U -> ' '.U,
+                12.U -> '0'.U,
+                13.U -> 'x'.U,
+                14.U -> dh(0),
+                15.U -> dh(1),
+                16.U -> dh(2),
+                17.U -> dh(3),
+                18.U -> dh(4),
+                19.U -> dh(5),
+                20.U -> dh(6),
+                21.U -> dh(7),
+                22.U -> '\n'.U
             )
         )
+
+        Mux(data === 0.U, 0.U, b)
     }
 
-    val printOutProfilingPadded = Wire(Vec(MAX_LEN, UInt(8.W)))
-
-    val clkLine = u32ToHexLine(io.profilingData(0))
-    val rdLine = u32ToHexLine(io.profilingData(1))
-    val wrLine = u32ToHexLine(io.profilingData(2))
-
-    printOutProfilingPadded := VecInit(
-        clkLine ++ rdLine ++ wrLine ++
-            Seq.fill(MAX_LEN - 33)(0.U)
-    )
-
-    val responses = VecInit(
-        Seq(
-            strToVecPadded("Program Received!\r\n"),
-            printOutProfilingPadded,
-            rxStoredPadded, // already Vec(32, UInt(8.W)) — pad rxStored to MAX_LEN too if needed
-            strToVecPadded(""), // placeholder for printRegs
-            strToVecPadded("")
-        )
-    )
-
+    // ------------------------------------------------------------
+    // Response metadata
+    // ------------------------------------------------------------
     val responseLengths = VecInit(
         Seq(
-            20.U, // "Program Received!\r\n"
+            20.U, // Program Received
             33.U, // Profiling
-            rxCount, // RX buffer length
-            (32 * 11).U, // printRegs (32 registers)
-            (64 * 22).U // Print out the memory
+            rxCount, // RX echo
+            (32 * 11).U, // Registers
+            (64 * 23).U // Memory
         )
     )
 
-    val maxMsgLen = 64 * 22
-    val idx = RegInit(0.U(log2Ceil(maxMsgLen).W))
-    val sending = RegInit(false.B)
-    val latchedResponseType = RegInit(0.U(4.W))
+    val resp0 = strToVecPadded("Program Received!\r\n")
+    val resp1 = printOutProfilingPadded
+    val resp2 = rxStoredPadded
 
+    // ------------------------------------------------------------
+    // TX control & pipelined byte generator
+    // ------------------------------------------------------------
+    val sending = RegInit(false.B)
     io.busy := sending
 
-    // Rising edge detect for sendResponse
     val sendPrev = RegNext(io.sendResponse, false.B)
     val sendRise = io.sendResponse && !sendPrev
 
-    // Latch responseType when we start sending
+    val latchedResponseType = RegInit(0.U(4.W))
     when(sendRise && !sending) {
         latchedResponseType := io.responseType
     }
 
     val msgSel = Mux(latchedResponseType <= 3.U, latchedResponseType, 4.U)
     val msgLen = responseLengths(msgSel)
-    val msgVec = responses(msgSel)
 
-    val msgByte = Wire(UInt(8.W))
-    msgByte := msgVec(idx)
-    when(msgSel === 3.U) {
-        msgByte := regPrintByte(idx)
-    }.elsewhen(msgSel === 4.U) {
-        msgByte := memPrintByte(idx)
-    }
+    // Counters (small, fast)
+    val idxStr = RegInit(0.U(6.W))
+    val regIdx = RegInit(0.U(5.W))
+    val regOff = RegInit(0.U(4.W))
+    val memIdx = RegInit(0.U(6.W))
+    val memOff = RegInit(0.U(5.W))
 
-    // Default TX signals
-    txm.io.channel.valid := false.B
-    txm.io.channel.bits := 0.U
+    // Prefetch buffer (breaks critical path)
+    val outByte = RegInit(0.U(8.W))
+    val outValid = RegInit(false.B)
+    val lastInFlight = RegInit(false.B)
 
-    // Start sending when we want to send
+    txm.io.channel.valid := sending && outValid
+    txm.io.channel.bits := outByte
+
+    val txFire = txm.io.channel.valid && txm.io.channel.ready
+
     when(sendRise && !sending) {
         sending := true.B
-        idx := 0.U
+        outValid := false.B
+        lastInFlight := false.B
+        idxStr := 0.U
+        regIdx := 0.U; regOff := 0.U
+        memIdx := 0.U; memOff := 0.U
     }
 
-    // RX queue no longer controls TX
-    inQ.io.deq.ready := false.B
+    val nextByte = Wire(UInt(8.W))
+    nextByte := 0.U
 
-    // Stream the message out, one char at a time
-    when(sending) {
-        txm.io.channel.valid := true.B
-        txm.io.channel.bits := msgByte
+    when(msgSel === 0.U) { nextByte := resp0(idxStr) }
+        .elsewhen(msgSel === 1.U) { nextByte := resp1(idxStr) }
+        .elsewhen(msgSel === 2.U) { nextByte := resp2(idxStr) }
+        .elsewhen(msgSel === 3.U) { nextByte := regPrintByte(regIdx, regOff) }
+        .otherwise { nextByte := memPrintByte(memIdx, memOff) }
 
-        when(txm.io.channel.ready) {
-            txm.io.channel.valid := true.B
-            txm.io.channel.bits := msgByte
-            when(idx === msgLen - 1.U) {
-                sending := false.B
+    val strLast = idxStr === (msgLen - 1.U)(5, 0)
+    val regLast = regIdx === 31.U && regOff === (REG_LINE_LEN - 1).U
+    val memLast =
+        memIdx === (MEM_ENTRIES - 1).U && memOff === (MEM_LINE_LEN - 1).U
+
+    val loadNext = sending && (!outValid || txFire)
+
+    when(loadNext) {
+        outByte := nextByte
+        outValid := true.B
+
+        lastInFlight :=
+            (msgSel <= 2.U && strLast) ||
+                (msgSel === 3.U && regLast) ||
+                (msgSel === 4.U && memLast)
+
+        when(msgSel <= 2.U) {
+            when(!strLast) { idxStr := idxStr + 1.U }
+        }.elsewhen(msgSel === 3.U) {
+            when(regOff === (REG_LINE_LEN - 1).U) {
+                regOff := 0.U; regIdx := regIdx + 1.U
             }.otherwise {
-                idx := idx + 1.U
+                regOff := regOff + 1.U
+            }
+        }.otherwise {
+            when(memOff === (MEM_LINE_LEN - 1).U) {
+                memOff := 0.U; memIdx := memIdx + 1.U
+            }.otherwise {
+                memOff := memOff + 1.U
             }
         }
+    }
+
+    when(txFire && lastInFlight) {
+        sending := false.B
+        outValid := false.B
+        lastInFlight := false.B
     }
 }
