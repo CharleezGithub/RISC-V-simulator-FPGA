@@ -85,6 +85,10 @@ class ID_EX extends Module {
         // control hazard
         val flushIn = Input(Bool())
 
+        val rs1AddrIn = Input(UInt(5.W))
+        val rs2AddrIn = Input(UInt(5.W))
+        val rs1AddrOut = Output(UInt(5.W))
+        val rs2AddrOut = Output(UInt(5.W))
     })
     // Pipeline Registers
     val rdaddrReg = RegInit(0.U(5.W))
@@ -95,6 +99,8 @@ class ID_EX extends Module {
     val opcodeReg = RegInit(0.U((32.W)))
     val funct3Reg = RegInit(0.U((32.W)))
     val funct7Reg = RegInit(0.U((32.W)))
+    val rs1AddrReg = RegInit(0.U(5.W))
+    val rs2AddrReg = RegInit(0.U(5.W))
 
     val immIReg = RegInit(0.U((32.W)))
     val immSReg = RegInit(0.U((32.W)))
@@ -118,7 +124,8 @@ class ID_EX extends Module {
         opcodeReg := io.opcodeIn
         funct3Reg := io.funct3In
         funct7Reg := io.funct7In
-
+        rs1AddrReg := io.rs1AddrIn
+        rs2AddrReg := io.rs2AddrIn
         immIReg := io.immIIn
         immSReg := io.immSIn
         immBReg := io.immBIn
@@ -136,7 +143,8 @@ class ID_EX extends Module {
         opcodeReg := 0.U
         funct3Reg := 0.U
         funct7Reg := 0.U
-
+        rs1AddrReg := 0.U
+        rs2AddrReg := 0.U
         immIReg := 0.U
         immSReg := 0.U
         immBReg := 0.U
@@ -163,6 +171,8 @@ class ID_EX extends Module {
     io.immBOut := immBReg
     io.immUOut := immUReg
     io.immJOut := immJReg
+    io.rs1AddrOut := rs1AddrReg
+    io.rs2AddrOut := rs2AddrReg
 
     io.widthSizeOut := widthsizeReg
     io.memWriteOut := memWriteReg

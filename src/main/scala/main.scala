@@ -346,6 +346,22 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     val allowWriteback = runEnable
     decoder.io.writeFlag := writeback.io.rfWEn && allowWriteback
 
+
+    //forwarding
+    execute.io.rs1Addr := pipeline2.io.rs1AddrOut
+    execute.io.rs2Addr := pipeline2.io.rs2AddrOut
+    execute.io.exmem_rd  := pipeline3.io.rdaddrOut
+    execute.io.exmem_alu := pipeline3.io.ALUOut
+    execute.io.exmem_wb  := pipeline3.io.wbFlagOut
+    execute.io.memwb_rd      := pipeline4.io.rdaddrOut
+    execute.io.memwb_alu     := pipeline4.io.ALUOut
+    execute.io.memwb_load    := pipeline4.io.loadDataOut
+    execute.io.memwb_memRead := pipeline4.io.memReadOut
+    execute.io.memwb_wb      := pipeline4.io.wbFlagOut
+    pipeline2.io.rs1AddrIn := pipeline1.io.instr(19, 15)
+    pipeline2.io.rs2AddrIn := pipeline1.io.instr(24, 20)
+
+
     // Branch type singals from execute - pipeline4 - fetch
     fetch.io.branchTaken := execute.io.branchTaken
     fetch.io.branchTarget := execute.io.branchTarget
