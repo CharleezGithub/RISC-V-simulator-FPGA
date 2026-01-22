@@ -58,7 +58,8 @@ class Uart(frequ: Int, baud: Int = 115200) extends Module {
     inQ.io.enq.valid := rxm.io.channel.valid && io.captureEnable
     inQ.io.enq.bits := rxm.io.channel.bits
     rxm.io.channel.ready := Mux(io.captureEnable, inQ.io.enq.ready, true.B)
-    inQ.io.deq.ready := false.B
+    // Drain the queue to avoid stalling RX (we don't use the queued data).
+    inQ.io.deq.ready := true.B
 
     // ------------------------------------------------------------
     // Constants & helpers

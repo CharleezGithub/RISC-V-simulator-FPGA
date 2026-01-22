@@ -24,11 +24,11 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     val profilingPending = RegInit(false.B)
 
     require(
-        programInit.length <= 64,
-        s"programInit too large: ${programInit.length} > 64"
+        programInit.length <= 512,
+        s"programInit too large: ${programInit.length} > 512"
     )
     val instructionMemory = RegInit(
-        VecInit(programInit.padTo(64, 0.U(32.W)))
+        VecInit(programInit.padTo(512, 0.U(32.W)))
     )
 
     // ---
@@ -237,13 +237,9 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
 
     val runEnable = (state === running) || (drainCounter =/= 0.U)
 
-    // control hazard - extend flush for one more cycle to ensure proper flushing
-    val flushReg = RegInit(false.B)
-    flushReg := execute.io.flush
-    val flushExtended = execute.io.flush || flushReg
-
-    pipeline1.io.flushIn := flushExtended // IF/ID gets NOP
-    pipeline2.io.flushIn := flushExtended // ID/EX becomes bubble
+    // control hazard - flush IF/ID and ID/EX on taken branch/jump
+    pipeline1.io.flushIn := execute.io.flush // IF/ID gets NOP
+    pipeline2.io.flushIn := execute.io.flush // ID/EX becomes bubble
 
     // Connecting Fetch - pipeline registers
     fetch.io.program := instructionMemory

@@ -5,7 +5,7 @@ import chisel3.util._
 
 class Fetch extends Module {
     val io = IO(new Bundle {
-        val program = Input(Vec(64, UInt(32.W))) // full program memory
+        val program = Input(Vec(512, UInt(32.W))) // full program memory
         val enable = Input(Bool())
         val resetPC = Input(Bool())
         val pcOut = Output(UInt(32.W)) // current PC to send to ID

@@ -19,15 +19,18 @@ class UartBootloader extends Module {
     val active = RegInit(false.B)
     val doneReg = RegInit(false.B)
 
-    val assembledWord = Wire(UInt(32.W))
-    assembledWord := Cat(
+    val wordsRemaining = RegInit(0.U(32.W))
+    val headerPending = RegInit(true.B)
+
+    val incomingWord = Wire(UInt(32.W))
+    incomingWord := Cat(
         byteBuffer(3),
         byteBuffer(2),
         byteBuffer(1),
         byteBuffer(0)
     )
     when(active && io.rxValid && byteIdx === 3.U) {
-        assembledWord := Cat(
+        incomingWord := Cat(
             io.rxData,
             byteBuffer(2),
             byteBuffer(1),
@@ -37,7 +40,7 @@ class UartBootloader extends Module {
 
     io.memWriteEn := false.B
     io.memWriteAddr := wordAddr
-    io.memWriteData := assembledWord
+    io.memWriteData := incomingWord
     io.done := doneReg
 
     when(io.start) {
@@ -45,17 +48,33 @@ class UartBootloader extends Module {
         wordAddr := 0.U
         byteIdx := 0.U
         doneReg := false.B
+        headerPending := true.B
+        wordsRemaining := 0.U
     }
 
-    when(io.rxData === 0xff.U && io.rxValid && active) {
-        doneReg := true.B
-        active := false.B
-    }.elsewhen(active && io.rxValid) {
+    when(active && io.rxValid) {
         byteBuffer(byteIdx) := io.rxData
         when(byteIdx === 3.U) {
-            io.memWriteEn := true.B
-            wordAddr := wordAddr + 1.U
-            byteIdx := 0.U
+            when(headerPending) {
+                wordsRemaining := incomingWord
+                headerPending := false.B
+                byteIdx := 0.U
+                when(incomingWord === 0.U) {
+                    doneReg := true.B
+                    active := false.B
+                }
+            }.elsewhen(wordsRemaining =/= 0.U) {
+                io.memWriteEn := true.B
+                wordAddr := wordAddr + 1.U
+                byteIdx := 0.U
+                wordsRemaining := wordsRemaining - 1.U
+                when(wordsRemaining === 1.U) {
+                    doneReg := true.B
+                    active := false.B
+                }
+            }.otherwise {
+                byteIdx := 0.U
+            }
         }.otherwise {
             byteIdx := byteIdx + 1.U
         }
