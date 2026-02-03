@@ -19,7 +19,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
         val runningLED = Output(Bool())
         val printRegLED = Output(Bool())
 
-        // val regsOut = Output(Vec(32, UInt(32.W)))
+        val regsOut = Output(Vec(32, UInt(32.W)))
     })
     val profilingPending = RegInit(false.B)
 
@@ -390,7 +390,7 @@ class RISCV(programInit: Seq[UInt] = Seq.empty) extends Module {
     uart.io.profilingData := profilingLatched
     uart.io.dataMemory := printMemLatch
 
-    // io.regsOut := decoder.io.regsOut
+    io.regsOut := decoder.io.regsOut
 
 }
 

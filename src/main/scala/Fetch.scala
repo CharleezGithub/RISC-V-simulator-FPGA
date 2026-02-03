@@ -17,6 +17,8 @@ class Fetch extends Module {
         val ecallOut = Output(Bool())
     })
 
+    val RESET_PC = "h80000000".U(32.W)
+
     // Control inputs from later stages (dummy values for now)
     val branchEn = RegInit(false.B) // branch/jump taken
     val branchAddr = RegInit(0.U(32.W)) // branch target
@@ -37,7 +39,7 @@ class Fetch extends Module {
     val ecall = io.instr === "h00000073".U
 
     when(io.resetPC) {
-        pcReg := 0.U
+        pcReg := RESET_PC
     }
     .elsewhen(io.enable && !ecall) {
         pcReg := pcNext
@@ -47,7 +49,7 @@ class Fetch extends Module {
     io.pcOut := pcReg
 
     // Instruction fetch
-    val instrIndex = pcReg >> 2
+    val instrIndex = (pcReg - RESET_PC) >> 2
     io.instr := io.program(instrIndex)
 
     io.ecallOut := ecall

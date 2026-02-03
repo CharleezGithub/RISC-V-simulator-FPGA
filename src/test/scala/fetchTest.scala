@@ -11,9 +11,9 @@ class fetchTest extends AnyFlatSpec with ChiselScalatestTester {
     test(new Fetch) { dut =>
 
       val program = Seq(
-        "h00100093".U, // PC = 0  -> addi x1, x0, 1
-        "h00200113".U, // PC = 4  -> addi x2, x0, 2
-        "h00300193".U  // PC = 8  -> addi x3, x0, 3
+        "h00100093".U, // PC = 0x80000000 -> addi x1, x0, 1
+        "h00200113".U, // PC = 0x80000004 -> addi x2, x0, 2
+        "h00300193".U  // PC = 0x80000008 -> addi x3, x0, 3
       )
 
       // Load program memory
@@ -28,7 +28,7 @@ class fetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.resetPC.poke(true.B)
       dut.clock.step(1)
 
-      dut.io.pcOut.expect(0.U)
+      dut.io.pcOut.expect("h80000000".U)
       dut.io.instr.expect("h00100093".U)
 
 
@@ -36,14 +36,14 @@ class fetchTest extends AnyFlatSpec with ChiselScalatestTester {
       dut.io.enable.poke(true.B)
 
       dut.clock.step(1)
-      dut.io.pcOut.expect(4.U)
+      dut.io.pcOut.expect("h80000004".U)
       dut.io.instr.expect("h00200113".U)
 
       dut.clock.step(1)
-      dut.io.pcOut.expect(8.U)
+      dut.io.pcOut.expect("h80000008".U)
       dut.io.instr.expect("h00300193".U)
 
-      dut.io.pcOut.expect(8.U)
+      dut.io.pcOut.expect("h80000008".U)
       dut.io.instr.expect("h00300193".U)
     }
   }
